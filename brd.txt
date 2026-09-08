@@ -1,0 +1,1413 @@
+Executive Summary: The organization currently prepares its Treasury Report and Dashboard primarily through Microsoft Excel. Information is collected from multiple:
+
+Business Units
+
+Bank statements
+
+Financing schedules
+
+Working capital facilities
+
+Loan schedules
+
+Investment information
+
+Cash flow forecasts
+
+Other treasury-related sources
+
+The existing Excel-based process involves manual data collection, consolidation, validation, commentary, review, and approval activities. This creates dependency on spreadsheets, increases the possibility of data inconsistencies, makes historical reporting difficult to reproduce, and limits visibility into status of submissions and approvals.
+
+The organization requires a centralized web-based Treasury Reporting and Dashboard Web App Portal.
+
+The proposed application will allow BUs to enter or upload their data into a controlled system. Submitted data will pass through a structured review and approval workflow involving BU Finance Heads, Business Heads, Corporate Finance, and the Chief Financial Officer.
+
+Only CFO-approved data will be published to final Treasury Dashboard for viewing by the CEO and Board Members.
+
+This system will be hosted on Microsoft Internet Information Services, IIS, and Microsoft SQL Server will be used as the primary application database.
+
+The objective is to establish a secure, auditable, database-driven Treasury reporting platform that becomes single source of truth for Treasury reporting.
+
+
+
+
+Business Background: Existing Treasury Report contains information relating to areas such as:
+
+Funds Position
+
+Bank Balances
+
+Working Capital Facilities
+
+Loan and Borrowing Schedules
+
+Debt and Equity Investments
+
+Cash Flow Forecasts
+
+Business Unit Cash Flow
+
+Foreign Exchange Conversion
+
+Management Commentary
+
+Executive Treasury Dashboard
+
+Existing workbook contains multiple individual bank and account worksheets and relies on formulas, manual updates, external inputs, and management comments.
+
+While certain calculations are already automated within Excel, the overall process remains dependent on manual preparation and spreadsheet management.
+
+Business Objectives: Primary objectives are to:
+
+Establish a centralized source of Treasury information.
+
+Automate Treasury data collection from BUs.
+
+Allow users to enter information directly or upload standardized Excel templates.
+
+Introduce controlled review and approval workflows.
+
+Provide structured management commentary at each approval level.
+
+Improve accuracy and consistency of Treasury reporting.
+
+Prevent data from being modified after final approval without formal reopening and version control.
+
+Maintain complete historical Treasury reporting snapshots.
+
+Provide consolidated Group-level Treasury reporting.
+
+Provide BU-level visibility according to user permissions.
+
+Automate Treasury calculations currently maintained within Excel.
+
+Provide CEO and Board Members with approved executive dashboards.
+
+Maintain a complete audit trail of data entry, modification, review, comments, approval, rejection, and reopening.
+
+Reduce manual report preparation effort.
+
+
+
+
+Project Scope: Initial solution shall include:
+
+User authentication
+
+Role-based authorization
+
+BU access control
+
+Reporting period management
+
+Treasury master data management
+
+Bank account management
+
+Bank balance reporting
+
+Funds Position
+
+Working Capital Facilities
+
+Loan and Borrowing Management
+
+Debt and Equity Investments
+
+Cash Flow Forecasting
+
+BU Treasury submissions
+
+Excel data upload
+
+Manual data entry
+
+Automated validation
+
+Review and approval workflow
+
+Management comments
+
+Exception management
+
+Consolidated Group reporting
+
+Executive Treasury Dashboard
+
+CFO approval
+
+CEO and Board Member dashboard access
+
+Report snapshot management
+
+Audit trail
+
+Excel export
+
+PDF report export
+
+Historical reporting
+
+
+
+
+Key Stakeholders: The key business stakeholders are
+
+Stakeholder
+
+Responsibility
+
+BU Finance User
+
+Treasury data entry and upload
+
+BU Finance Head
+
+Review BU submission and provide comments
+
+Business Head
+
+Review business-level Treasury information and provide comments
+
+Corporate Finance Team
+
+Group-level review, validation, consolidation and comments
+
+Chief Financial Officer
+
+Final review and approval
+
+Chief Executive Officer
+
+View approved executive Treasury dashboard
+
+Board Members
+
+View published Treasury reports and dashboards
+
+Treasury Team
+
+Treasury master data and operational reporting
+
+IT Department
+
+Application infrastructure, security, support and administration
+
+Internal Audit
+
+Review audit history and controls
+
+System Administrator
+
+User, access and application configuration
+
+
+
+Proposed Business Process: The required Treasury reporting process shall operate as follows:
+
+BU Data Entry / Upload  BU Finance Head Review  Business Head Review  Corporate Finance Review  CFO Review and Approval  Approved Treasury Snapshot  CEO and Board Dashboard
+
+Every Treasury reporting cycle shall be associated with a defined Reporting Period. Example:
+
+Reporting Date: 31 August 2026
+
+Reporting Period: August 2026
+
+Current Status: Corporate Finance Review
+
+
+
+
+Reporting Period Management: Reporting Period shall be one of the core controls within system. Each reporting cycle shall contain at minimum:
+
+Reporting Period
+
+Reporting Date
+
+Submission Start Date
+
+BU Submission Deadline
+
+Review Deadline
+
+CFO Approval Deadline
+
+Period Status
+
+Created By
+
+Created Date
+
+Closed Date
+
+Published Date
+
+Reporting Date shall control which financial information is included in Treasury Dashboard.
+
+Data dated after the Reporting Date shall not automatically affect an approved historical Treasury report.
+
+This requirement is intended to ensure that historical reports remain reproducible.
+
+
+
+
+Business Roles and Permissions: 
+
+BU Finance User: BU Finance User shall be able to:
+
+View assigned Business Units only
+
+Enter Treasury data
+
+Upload approved Treasury templates
+
+Save data as draft
+
+Run validation
+
+Correct validation errors
+
+Add supporting documentation
+
+Respond to reviewer comments
+
+Submit data for BU Finance Head review
+
+View own historical submissions
+
+User shall not be able to modify data after submission unless submission is returned.
+
+BU Finance Head: BU Finance Head shall be able to:
+
+View complete Treasury information for assigned Business Units
+
+Review submitted information
+
+Review validation results
+
+Add comments
+
+Raise queries
+
+Return submission to BU Finance User
+
+Approve submission
+
+View submission history
+
+Business Head: Business Head shall be able to:
+
+View Treasury information for assigned businesses
+
+Review BU Finance Head-approved submissions
+
+Add management comments
+
+Raise queries
+
+Return submission for correction
+
+Approve submission
+
+Corporate Finance Team: Corporate Finance shall be able to:
+
+View all Business Units
+
+Review Group Treasury data
+
+Review Business Unit submissions
+
+Perform consolidation
+
+Review automated validations
+
+Review exceptions
+
+Add comments
+
+Return data for correction
+
+Approve data for CFO review
+
+Manage reporting periods
+
+Generate management reports
+
+Prepare final Treasury dashboard
+
+Chief Financial Officer: CFO shall be able to:
+
+View Group-wide Treasury information
+
+View Business Unit submissions
+
+View management comments
+
+View outstanding exceptions
+
+View consolidated Treasury KPIs
+
+Return the report to Corporate Finance
+
+Approve the final Treasury report
+
+Approve exceptional items where authorized
+
+Review historical approved reports
+
+CFO approval shall represent final financial approval for the reporting period.
+
+Chief Executive Officer: CEO shall have read-only access to:
+
+CFO-approved Treasury dashboards
+
+Executive KPIs
+
+Consolidated Treasury position
+
+Key management commentary
+
+Historical approved reports
+
+Board Members: Board Members shall have read-only access to published Treasury information approved for Board distribution. Operational data-entry and approval screens shall not be available to Board Members.
+
+System Administrator: System Administrator shall manage:
+
+Users
+
+Roles
+
+Access rights
+
+BU mapping
+
+Application configuration
+
+Reference data
+
+Technical configuration
+
+System administration access shall not automatically provide authority to approve financial information.
+
+Approval Workflow Requirements: System shall support following statuses:
+
+Draft
+
+Submitted
+
+BU Finance Review
+
+BU Finance Approved
+
+Business Head Review
+
+Business Head Approved
+
+Corporate Finance Review
+
+Corporate Finance Approved
+
+CFO Review
+
+CFO Approved
+
+Published
+
+Returned for Correction
+
+Reopened
+
+Every approval action shall capture:
+
+Reporting Period
+
+Business Unit
+
+Approval Stage
+
+User
+
+Role
+
+Action
+
+Comment
+
+Date
+
+Time
+
+Users shall not approve their own submission where maker-checker controls apply.
+
+Rejection and Return Process: Reviewers shall be able to return a submission to previous responsible stage. A return shall require a mandatory reason. System shall record:
+
+Returned By
+
+Returned Date
+
+Return Reason
+
+Previous Status
+
+New Status
+
+Relevant user shall be notified that corrective action is required. Corrected submission shall return through applicable approval process.
+
+CFO Approval and Data Locking: Once CFO approval is completed:
+
+Reporting period shall be financially locked.
+
+Approved financial values shall not be directly editable.
+
+CEO and Board dashboards shall use only approved data.
+
+Approved Treasury report shall be retained as a permanent historical snapshot.
+
+If modification is required after CFO approval, an authorized user shall formally reopen the reporting period. Reopening shall require:
+
+Authorized user
+
+Mandatory reason
+
+Date and time
+
+Relevant Reporting Period
+
+Approval where applicable
+
+System shall maintain previous approved versions.
+
+Example: 
+
+Version 1
+
+Approved: 31 August 2026
+
+Version 2
+
+Revised and Approved: 2 September 2026
+
+Version 1 shall remain available for audit purposes.
+
+
+
+
+Treasury Modules: Solution shall include following primary functional modules.
+
+Executive Dashboard: shall provide consolidated Treasury information for management.
+
+Funds Position: System shall consolidate available cash and bank balances across:
+
+Business Units
+
+Legal Entities
+
+Banks
+
+Accounts
+
+Countries
+
+Currencies
+
+Account Types
+
+Bank Account Management: A central Bank Account Master shall replace dependency on multiple individual spreadsheet worksheets. Information shall include:
+
+Business Unit
+
+Legal Entity
+
+Bank
+
+Branch
+
+Account Name
+
+Account Number
+
+Masked Account Number
+
+IBAN where applicable
+
+Currency
+
+Account Type
+
+Country
+
+Opening Date
+
+Closing Date
+
+Active Status
+
+Bank Balance Management: System shall maintain bank balances by account and reporting date. Information may include:
+
+Account
+
+Date
+
+Opening Balance
+
+Debit Movement
+
+Credit Movement
+
+Closing Balance
+
+Currency
+
+Source
+
+Upload Reference
+
+Closing balances shall automatically feed the Funds Position.
+
+Working Capital Facilities: Application shall maintain one centralized Working Capital Facility Master. Facility information shall include:
+
+Business Unit
+
+Legal Entity
+
+Bank
+
+Facility Type
+
+Facility Reference
+
+Currency
+
+Sanctioned Limit
+
+Utilized Amount
+
+Available Amount
+
+Interest Rate
+
+Benchmark Rate
+
+Spread
+
+Effective Date
+
+Expiry Date
+
+Security
+
+Covenant Information
+
+Status
+
+The system shall calculate: 
+
+Available Facility = Sanctioned Limit less Utilized Amount
+
+Duplicate facility definitions should not be maintained in multiple application areas.
+
+Loan and Borrowing Management: System shall maintain a centralized borrowing schedule. Information shall include:
+
+Business Unit
+
+Borrower
+
+Lender
+
+Loan Reference
+
+Facility Type
+
+Currency
+
+Original Loan Amount
+
+Current Outstanding
+
+Start Date
+
+Maturity Date
+
+Interest Type
+
+Interest Rate
+
+Benchmark Rate
+
+Spread
+
+Repayment Frequency
+
+Next Repayment Date
+
+Next Repayment Amount
+
+Security
+
+Covenant Details
+
+Loan Status
+
+System shall validate logical errors such as:
+
+Maturity Date before Start Date
+
+Invalid interest rate
+
+Negative outstanding amount
+
+Outstanding amount exceeding facility limits where applicable
+
+Missing repayment information
+
+Invalid dates
+
+Debt and Equity Investments: System shall maintain investments including:
+
+Business Unit
+
+Investment Type
+
+Security / Instrument
+
+Quantity
+
+Acquisition Cost
+
+Currency
+
+Market Price
+
+Valuation Date
+
+Current Market Value
+
+Unrealized Gain / Loss
+
+Maturity Date where applicable
+
+Investment Status
+
+Market price and valuation dates shall be clearly recorded.
+
+
+
+
+Foreign Exchange Rates: Foreign exchange rates shall not be embedded manually within calculation formulas. System shall maintain an FX Rate Master including:
+
+From Currency
+
+To Currency
+
+Exchange Rate
+
+Effective Date
+
+Rate Source
+
+Entered / Imported By
+
+Approval Status
+
+All currency conversions used by Treasury Dashboard shall reference an approved rate applicable to the relevant Reporting Date.
+
+Cash Flow Forecasting: Application shall support Business Unit cash flow forecasting. Initial design shall support weekly forecasting. Typical categories may include:
+
+Cash Flow Category
+
+Week 1
+
+Week 2
+
+Week 3
+
+Week 4
+
+Opening Cash
+
+        
+
+        
+
+        
+
+        
+
+Customer Collections
+
+        
+
+        
+
+        
+
+        
+
+Operating Payments
+
+        
+
+        
+
+        
+
+        
+
+Payroll
+
+        
+
+        
+
+        
+
+        
+
+Capital Expenditure
+
+        
+
+        
+
+        
+
+        
+
+Debt Servicing
+
+        
+
+        
+
+        
+
+        
+
+Intercompany Movement
+
+        
+
+        
+
+        
+
+        
+
+Other Inflows
+
+        
+
+        
+
+        
+
+        
+
+Other Outflows
+
+        
+
+        
+
+        
+
+        
+
+Closing Cash
+
+        
+
+        
+
+        
+
+        
+
+System shall consolidate BU cash flows automatically. Design should allow extension to a 13-week cash flow forecast in a later phase.
+
+
+
+
+
+
+Data Entry Requirements: Users shall be able to enter data directly through web forms. Web forms shall provide:
+
+Mandatory field indicators
+
+Searchable selections
+
+Date controls
+
+Currency controls
+
+Numeric formatting
+
+Save as Draft
+
+Validation
+
+Submission
+
+Where practical, users shall be able to copy or paste structured information into approved input grids.
+
+Excel Upload Requirements: For large datasets, system shall support standardized Excel upload templates. Process shall include:
+
+User downloads approved template.
+
+User completes data.
+
+User uploads file.
+
+System performs validation.
+
+System displays validation results.
+
+User corrects errors where required.
+
+Valid data is imported.
+
+Import activity is recorded in the audit trail.
+
+Upload templates shall contain controlled column structures. System shall detect invalid or modified template structures.
+
+Upload Validation: System shall validate uploaded records before committing them to production data. Validation shall include, where applicable:
+
+Valid Business Unit
+
+Valid Legal Entity
+
+Valid Bank Account
+
+Valid Currency
+
+Valid Reporting Period
+
+Valid Date
+
+Date within allowed Reporting Period
+
+Numeric Amount
+
+Mandatory Fields
+
+Duplicate Records
+
+Invalid Account
+
+Invalid Facility
+
+Invalid Loan
+
+Invalid Category
+
+Opening and Closing Balance inconsistencies
+
+Future-dated information
+
+Unmapped master records
+
+Example validation result:
+
+500 Records Uploaded
+
+493 Valid
+
+7 Invalid
+
+The system shall identify row and reason for each failed record.
+
+Business Comments: System shall provide structured comments throughout the approval workflow. Comments shall be associated with relevant business context such as:
+
+Reporting Period
+
+Business Unit
+
+Treasury Module
+
+Data Record
+
+Reviewer
+
+Role
+
+Date
+
+Time
+
+Example:
+
+Module: Cash Flow
+
+Category: Collections
+
+Comment: Collection from Customer ABC is expected to move into the next reporting period.
+
+Users shall be able to reply to comments. Comments shall not be permanently deleted from audit history.
+
+
+
+Exception Management: System shall automatically identify Treasury exceptions. Examples include:
+
+Missing BU submission
+
+Missing bank statement
+
+Bank balance after Reporting Date
+
+Missing FX rate
+
+Loan maturity inconsistency
+
+Working capital inconsistency
+
+Expired facility
+
+Facility utilization above limit
+
+Negative available liquidity
+
+Missing cash flow submission
+
+Unresolved reviewer comment
+
+Unmapped bank account
+
+Duplicate transaction
+
+Missing required documentation
+
+Exceptions shall be categorized by severity. Example:
+
+Critical
+
+High
+
+Medium
+
+Informational
+
+Critical exceptions may prevent final approval unless formally overridden by an authorized user.
+
+Review Workspace: Reviewers shall receive a consolidated review screen rather than having to navigate through every operational data-entry screen. Review Workspace shall show items such as:
+
+Submission Status
+
+BUs Submitted
+
+BUs Pending
+
+Validation Errors
+
+Open Comments
+
+Critical Exceptions
+
+Key Treasury KPIs
+
+Significant changes from previous period
+
+Data requiring reviewer attention
+
+CFO Review Workspace: Review screen shall provide an executive summary including: 
+
+Total Cash Balance
+
+Total Available Liquidity
+
+Total Working Capital Availability
+
+Total Borrowings
+
+Short-Term Debt
+
+Long-Term Debt
+
+Net Debt
+
+Upcoming Debt Maturities
+
+Cash Flow Forecast
+
+Liquidity Gaps
+
+Investment Position
+
+Business Unit Treasury Position
+
+Major Currency Exposure
+
+Open Exceptions
+
+Management Commentary
+
+CFO shall be able to drill down into supporting details where required.
+
+Executive Dashboard Requirements: CEO and Board Dashboard shall display only CFO-approved and published information. Dashboard shall include following key areas.
+
+Liquidity:
+
+Total Cash
+
+Available Working Capital
+
+Total Available Liquidity
+
+Minimum Liquidity Threshold
+
+Liquidity Headroom
+
+Debt:
+
+Total Borrowings
+
+Short-Term Debt
+
+Long-Term Debt
+
+Debt Maturity Profile
+
+Upcoming Repayments
+
+Average Cost of Borrowing
+
+Cash Flow: 
+
+Four-Week Forecast
+
+Future 13-Week Forecast capability
+
+Expected Collections
+
+Expected Payments
+
+Closing Cash Projection
+
+Liquidity Gap
+
+BU Position:
+
+BU Cash Balance
+
+BU Liquidity
+
+BU Working Capital Usage
+
+BU Cash Flow
+
+BU Contribution to Group Position
+
+Currency Exposure: 
+
+Currency-wise Cash Position
+
+Currency-wise Debt
+
+Currency-wise Exposure
+
+Investments: 
+
+Investment Value
+
+Investment Type
+
+Market Value
+
+Unrealized Gain or Loss
+
+Management Commentary: Dashboard shall provide management commentary from relevant approval levels.
+
+Dashboard Drill Down: Where authorized, dashboard users shall be able to drill down from consolidated information. 
+
+
+
+Example: Total Cash  Business Unit  Legal Entity  Bank  Bank Account
+
+
+
+The level of drill down available shall depend on the user's access rights.
+
+
+
+Treasury Snapshot: A Treasury Snapshot shall be generated upon final approval. Snapshot shall contain approved position for applicable Reporting Period. 
+
+
+
+Dashboard reporting for CEO and Board Members shall reference this approved snapshot rather than mutable operational data. 
+
+
+
+System shall retain snapshots for historical reporting.
+
+
+
+
+
+
+Historical Reporting: Users with appropriate permissions shall be able to access prior approved reporting periods. Historical reports shall allow comparisons such as:
+
+Current Month versus Previous Month
+
+Actual versus Forecast
+
+BU versus BU
+
+Current Year versus Previous Year
+
+Facility utilization trend
+
+Cash balance trend
+
+Debt trend
+
+Liquidity trend
+
+
+
+Audit Trail Requirements: Solution shall maintain a complete and immutable audit trail. System shall record at minimum:
+
+User Login where required
+
+Data Creation
+
+Data Modification
+
+Old Value
+
+New Value
+
+Record Deletion or Deactivation
+
+File Upload
+
+Submission
+
+Approval
+
+Rejection
+
+Return
+
+Comments
+
+Reopening
+
+Override
+
+Publishing
+
+Each audit record shall include:
+
+User
+
+Role
+
+Date
+
+Time
+
+Action
+
+Module
+
+Record
+
+Old Value where applicable
+
+New Value where applicable
+
+Reason where applicable
+
+Notifications: Application should notify users when workflow action is required. Examples: 
+
+BU submission deadline approaching
+
+Submission received
+
+Submission returned
+
+Reviewer comment received
+
+BU Finance approval required
+
+Business Head approval required
+
+Corporate Finance review required
+
+CFO approval required
+
+Reporting Period published
+
+Initial notifications may be implemented through corporate email. Future integration with Microsoft Teams may be considered.
+
+Reporting and Export: Authorized users shall be able to export approved Treasury information. Required output formats:
+
+Excel
+
+PDF
+
+Exports shall identify:
+
+Reporting Period
+
+Report Date
+
+Version
+
+Approval Status
+
+Generated Date
+
+Generated By
+
+Board-level reports should preferably be generated from approved Treasury snapshots.
+
+Search and Filtering: Application shall allow users to search and filter information by relevant attributes including:
+
+Reporting Period
+
+Business Unit
+
+Legal Entity
+
+Bank
+
+Account
+
+Currency
+
+Facility
+
+Loan
+
+Status
+
+Approval Stage
+
+Data Ownership: 
+
+BU shall be responsible for accuracy and completeness of information submitted by them. 
+
+BU Finance Heads shall be responsible for review of BU Treasury submissions. 
+
+Business Heads shall be responsible for business-level management review.
+
+Corporate Finance shall be responsible for Group consolidation and final financial review prior to CFO approval.
+
+The CFO shall provide final approval of the Treasury Report.
+
+Key Business Controls: System shall include following controls:
+
+Single controlled Reporting Date.
+
+Maker-checker approval.
+
+No direct editing after approval.
+
+Mandatory reason for returned submissions.
+
+Mandatory reason for reopening approved periods.
+
+Complete audit history.
+
+Business Unit access restrictions.
+
+Reporting Period locking.
+
+Duplicate record prevention.
+
+Data validation before submission.
+
+Exception reporting.
+
+Master data governance.
+
+CFO approval before publication.
+
+Version management.
+
+Approved snapshot retention.
+
+
+
+
+Phase 1 Scope: Phase 1 should focus on establishing a controlled and reliable Treasury reporting platform. Recommended Phase 1 scope:
+
+User Management
+
+Role Management
+
+Business Unit Access
+
+Reporting Period Management
+
+Bank Account Master
+
+Bank Balance Entry / Upload
+
+Funds Position
+
+Working Capital
+
+Loan Schedule
+
+Debt and Equity Investments
+
+Cash Flow Forecast
+
+FX Rate Management
+
+Excel Upload
+
+Data Validation
+
+Workflow
+
+Comments
+
+Exception Management
+
+Audit Trail
+
+CFO Approval
+
+Approved Snapshot
+
+Executive Dashboard
+
+CEO Access
+
+Board Access
+
+Excel Export
+
+PDF Export
+
+Later Phase Scope: Future phases may include:
+
+13-Week Advanced Cash Forecast
+
+Forecast Accuracy Analysis
+
+Treasury Scenario Planning
+
+Covenant Monitoring
+
+Automated Liquidity Alerts
+
+Advanced Analytics
+
+Mobile Access
+
+Conclusion: Proposed Treasury Reporting and Dashboard Automation System will replace current spreadsheet-centric reporting process with a centralized, controlled, and auditable Treasury reporting platform.
+
+Business Units will remain responsible for entering Treasury information, while a formal multi-level review and approval workflow will establish accountability and governance.
+
+The key process will be: 
+
+BU Data Submission → BU Finance Head Review → Business Head Review → Corporate Finance Review → CFO Approval → Approved Treasury Snapshot → CEO and Board Dashboard
+
+Microsoft SQL Server shall become the primary source of Treasury reporting data, while the web application hosted on IIS shall provide users with secure data entry, review, approval, reporting, and dashboard capabilities.
+
+The existing Treasury Excel workbook will remain an important functional reference during detailed system design, but spreadsheet cell structures and dependencies will not be carried directly into the new application architecture.
+
+The target outcome is a reliable Treasury reporting platform that improves data accuracy, reporting speed, governance, accountability, historical traceability, and executive visibility.

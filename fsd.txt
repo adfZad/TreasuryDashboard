@@ -1,0 +1,4666 @@
+Treasury Reporting & Dashboard Automation  |  Functional Specification Document
+
+Treasury Reporting & Dashboard Automation  |  Functional Specification Document
+
+Treasury Reporting & Dashboard Automation  |  Functional Specification Document
+
+Functional Specification Document (FSD)
+
+Treasury Reporting & Dashboard Automation System
+
+First Functional Design Deliverable
+
+Document Version
+
+0.1
+
+Status
+
+Draft for review
+
+Prepared Date
+
+01 September 2026
+
+Source BRD
+
+Business Requirement Document V1.docx
+
+Source Workbook
+
+Treasury report as on 15Aug2026.xlsx
+
+
+
+Classification: Internal Working Document
+
+
+
+
+0. Document Control and Source Basis
+
+Item
+
+Detail
+
+Purpose
+
+Translate the approved business requirements and the current Treasury Excel model into implementable functional specifications for an IIS hosted web application with SQL Server as the system of record.
+
+Primary business source
+
+Business Requirement Document V1.docx.
+
+Primary functional/data reference
+
+Treasury report as on 15Aug2026.xlsx, including the executive dashboard, functional schedules, and individual bank/account worksheets.
+
+Scope of this deliverable
+
+Module list, role/permission model, approval workflow, Excel field mapping, validations, database entities/mappings, screen inventory, dashboard KPIs, audit requirements, and Phase 1 versus later-phase scope.
+
+Design convention
+
+Where the BRD or Excel does not define an exact rule, this FSD labels the item as Proposed or TBD rather than treating an assumption as an approved requirement.
+
+
+
+Source observation: The workbook contains formulas and manual sections, including hard-coded currency rates and a number of broken #REF! references. The application should not reproduce spreadsheet cell dependencies; these must become explicit master data, business rules, adjustment records, or validation exceptions.
+
+
+
+0.1 Requirement Classification
+
+Tag
+
+Meaning
+
+Source
+
+Directly supported by the BRD and/or current Excel workbook.
+
+Derived
+
+Functional design needed to implement a source requirement without changing its business intent.
+
+TBD
+
+A business decision is required before build or UAT sign-off.
+
+
+
+0.2 Contents
+
+Module List
+
+Roles and Permissions
+
+Approval Workflow
+
+Detailed Field Mapping from Excel
+
+Validation Rules
+
+Database Entities and Mappings
+
+Screen List
+
+Dashboard KPIs
+
+Audit Requirements
+
+Phase 1 versus Later-Phase Scope
+
+Open Design Items
+
+Appendix: Excel Worksheet Inventory
+
+1. Module List
+
+ID
+
+Module
+
+Functional Responsibility
+
+Scope
+
+M01
+
+Authentication & Session
+
+Login, encrypted application credentials, session control, logout.
+
+Phase 1
+
+M02
+
+User, Role & BU Access Administration
+
+Users, roles, permissions, BU/business-area mappings; financial approval rights remain separate from system administration.
+
+Phase 1
+
+M03
+
+Organization & Treasury Master Data
+
+Business groups, BUs, legal entities, banks, countries, currencies, categories and configurable thresholds.
+
+Phase 1
+
+M04
+
+Reporting Period Management
+
+Reporting period, reporting date, submission/review/CFO deadlines, status, close and publish dates.
+
+Phase 1
+
+M05
+
+Bank Account Master
+
+Central account master replacing one-sheet-per-account dependency.
+
+Phase 1
+
+M06
+
+Bank Balance Entry & Upload
+
+Manual balance entry and standardized upload into staging, validation and production balance records.
+
+Phase 1
+
+M07
+
+Funds Position
+
+Consolidated cash position by BU, entity, bank, account, country, currency and account type.
+
+Phase 1
+
+M08
+
+FX Rate Management
+
+Approved rates by currency pair/effective date/source for dashboard conversion.
+
+Phase 1
+
+M09
+
+Working Capital Facilities
+
+Facility master, sanction, utilization, under-process amount, availability, utilization percentage, bank and region views.
+
+Phase 1
+
+M10
+
+Loan & Borrowing Management
+
+Short- and long-term loans, current outstanding, repayment schedules, interest fields and maturity tracking.
+
+Phase 1
+
+M11
+
+Loan Movement / Debt Forecast
+
+Projected payment, drawdown and closing loan balances by future period; reproduces the workbook loan movement schedule.
+
+Phase 1
+
+M12
+
+Debt, Equity & Investments
+
+Debt/equity KPI inputs, share/metal/fixed-deposit investments and valuation records.
+
+Phase 1
+
+M13
+
+Cash Flow Forecast
+
+BU forecast capture and consolidation. BRD initial design is weekly; current workbook is monthly Aug-Oct.
+
+Phase 1
+
+M14
+
+Upload Center & Staging
+
+Template download, upload, structure check, row validation, import and upload history.
+
+Phase 1
+
+M15
+
+Validation & Exception Engine
+
+Data-quality rules, workflow gating and severity-based exceptions.
+
+Phase 1
+
+M16
+
+Submission & Approval Workflow
+
+BU submission through CFO approval, return/correction, maker-checker, reopen and versioning.
+
+Phase 1
+
+M17
+
+Comments, Queries & Attachments
+
+Record/module-level comments, replies, supporting documents, reviewer queries and permanent history.
+
+Phase 1
+
+M18
+
+Reviewer Workspace
+
+Consolidated view of submissions, errors, comments, exceptions, KPIs and period-on-period movements.
+
+Phase 1
+
+M19
+
+CFO Review Workspace
+
+Executive review, drill-down, exception override where authorized, final approval or return.
+
+Phase 1
+
+M20
+
+Approved Snapshot & Publication
+
+Immutable approved snapshot, versioning, CFO lock and publish control.
+
+Phase 1
+
+M21
+
+Executive Dashboard
+
+CFO-approved dashboard for CEO and Board, with permission-controlled drill-down.
+
+Phase 1
+
+M22
+
+Historical Reporting & Comparison
+
+Approved-period retrieval and trend/comparison reporting.
+
+Phase 1
+
+M23
+
+Excel/PDF Export
+
+Approved report export with period, version, approval status, generated date and generated by.
+
+Phase 1
+
+M24
+
+Audit & Monitoring
+
+Immutable audit trail, audit search and Internal Audit access.
+
+Phase 1
+
+M25
+
+Email Notifications
+
+Workflow/action notifications through corporate email.
+
+Phase 1
+
+M26
+
+13-Week Advanced Forecast
+
+13-week forecast and advanced forecast management.
+
+Later
+
+M27
+
+Forecast Accuracy & Scenario Planning
+
+Forecast-versus-actual analysis and treasury scenarios.
+
+Later
+
+M28
+
+Covenant Monitoring & Automated Liquidity Alerts
+
+Automated covenant checks and liquidity alerts.
+
+Later
+
+M29
+
+Advanced Analytics & Mobile Access
+
+Advanced analytics and mobile access.
+
+Later
+
+M30
+
+Microsoft Teams Notification Integration
+
+Future notification channel mentioned in BRD.
+
+Later
+
+
+
+2. Roles and Permissions
+
+Access must be evaluated using both role and assigned BU/business area. Read/write/approve rights below are functional permissions; database or infrastructure privileges do not grant financial approval authority.
+
+Role
+
+Data Scope
+
+Allowed Functions
+
+Restrictions / Notes
+
+BU Finance User
+
+Assigned BU only
+
+Create/edit draft treasury data; upload templates; run validation; attach documents; respond to comments; submit; view own history.
+
+No editing after submission unless returned. No approval of own submission.
+
+BU Finance Head
+
+Assigned BU(s)
+
+Read full BU submission; validation/errors; comment/query; return; approve; view history.
+
+Cannot approve own maker activity where maker-checker applies.
+
+Business Head
+
+Assigned business area
+
+Read BU Finance Head-approved data; comment/query; return; approve.
+
+No operational data entry unless separately assigned another role.
+
+Corporate Finance Team
+
+All BUs / Group
+
+Read all BUs; consolidate; review validation/exceptions; comment; return; approve to CFO; manage reporting periods; prepare reports/dashboard.
+
+May not provide final CFO approval.
+
+Chief Financial Officer
+
+Group
+
+Read consolidated/BU data, comments, KPIs and exceptions; return to Corporate Finance; approve final report; authorized exception override; history.
+
+CFO approval is final financial approval.
+
+Chief Executive Officer
+
+Published Group data
+
+Read CFO-approved dashboards, KPIs, consolidated position, commentary and history.
+
+Read-only.
+
+Board Member
+
+Board-published data
+
+Read published Treasury dashboard/reports approved for Board distribution.
+
+Read-only; no operational/review screens.
+
+Treasury Team
+
+Group or assigned treasury scope
+
+Treasury master data and operational reporting. Proposed: maintain bank/facility/loan/FX reference data subject to segregation of duties.
+
+Detailed create/approve master-data matrix is TBD.
+
+System Administrator
+
+Application-wide
+
+Users, roles, access rights, BU mapping, application/reference/technical configuration.
+
+Must not automatically gain financial approval rights.
+
+Internal Audit
+
+Application-wide audit scope
+
+Read audit history, approved snapshots and controls evidence.
+
+Read-only. Detailed report/export permissions are TBD.
+
+IT Department / Support
+
+Technical scope
+
+Infrastructure, availability, support, security administration, backup and DR.
+
+No financial data approval by virtue of technical access.
+
+
+
+2.1 Permission Matrix by Functional Area
+
+Functional Area
+
+BU User
+
+BU Fin Head
+
+Business Head
+
+Corp Finance
+
+CFO
+
+CEO
+
+Board
+
+Treasury
+
+Sys Admin
+
+Audit
+
+Operational data entry
+
+C/U
+
+R
+
+R
+
+R
+
+R
+
+R approved only
+
+R published only
+
+Proposed C/U master + R data
+
+Admin only
+
+R audit
+
+Excel upload
+
+C/U
+
+R
+
+R
+
+R
+
+R
+
+-
+
+-
+
+Proposed C/U
+
+Admin support
+
+R audit
+
+Validation results
+
+R/Run
+
+R
+
+R
+
+R
+
+R
+
+R summary
+
+R summary
+
+R
+
+Admin support
+
+R
+
+Comments / queries
+
+C/R reply
+
+C/R
+
+C/R
+
+C/R
+
+C/R
+
+R approved
+
+R published
+
+C/R proposed
+
+Admin support
+
+R
+
+Approve / return
+
+Submit only
+
+Approve/Return
+
+Approve/Return
+
+Approve/Return
+
+Final Approve/Return
+
+-
+
+-
+
+-
+
+-
+
+-
+
+Exception override
+
+-
+
+-
+
+-
+
+Recommend / manage
+
+Approve where authorized
+
+-
+
+-
+
+Proposed manage
+
+-
+
+R
+
+Reporting period
+
+R
+
+R
+
+R
+
+C/U/Close
+
+R/Approve final
+
+R published
+
+R published
+
+R
+
+Admin config
+
+R
+
+Master data
+
+R
+
+R
+
+R
+
+R
+
+R
+
+-
+
+-
+
+C/U proposed
+
+C/U config
+
+R
+
+Approved snapshot
+
+R own BU history
+
+R BU history
+
+R business history
+
+R Group
+
+R Group
+
+R Group
+
+R Board scope
+
+R
+
+Admin support
+
+R
+
+Audit trail
+
+R own submission events
+
+R BU
+
+R business
+
+R Group
+
+R Group
+
+R limited approved
+
+R limited published
+
+R proposed
+
+R technical
+
+R Group
+
+
+
+3. Approval Workflow
+
+Core workflow: BU Data Entry / Upload → BU Finance Head Review → Business Head Review → Corporate Finance Review → CFO Review & Approval → Approved Treasury Snapshot → CEO / Board Dashboard.
+
+
+
+Status
+
+Owner / Actor
+
+Permitted Action
+
+Next Status
+
+Financial Data Edit
+
+Draft
+
+BU Finance User
+
+Create/edit/upload/validate
+
+Submitted
+
+No
+
+Submitted
+
+System
+
+Freeze maker edits and route to reviewer
+
+BU Finance Review
+
+Yes
+
+BU Finance Review
+
+BU Finance Head
+
+Approve or return
+
+BU Finance Approved / Returned for Correction
+
+Yes
+
+BU Finance Approved
+
+System
+
+Route to Business Head
+
+Business Head Review
+
+Yes
+
+Business Head Review
+
+Business Head
+
+Approve or return
+
+Business Head Approved / Returned for Correction
+
+Yes
+
+Business Head Approved
+
+System
+
+Make available for Group consolidation
+
+Corporate Finance Review
+
+Yes
+
+Corporate Finance Review
+
+Corporate Finance
+
+Consolidate, validate, resolve exceptions/comments, approve or return
+
+Corporate Finance Approved / Returned for Correction
+
+Yes
+
+Corporate Finance Approved
+
+System
+
+Route Group report to CFO
+
+CFO Review
+
+Yes
+
+CFO Review
+
+CFO
+
+Final approve, return, or approved exception override
+
+CFO Approved / Corporate Finance Review
+
+Yes
+
+CFO Approved
+
+System
+
+Financially lock reporting version and generate snapshot
+
+Published
+
+Locked
+
+Published
+
+Corporate Finance / authorized publication control
+
+Make approved snapshot visible to CEO/Board scope
+
+Published
+
+Locked
+
+Returned for Correction
+
+Previous responsible stage / BU maker
+
+Correct and resubmit through applicable approval chain
+
+Applicable review stage
+
+Editable only at returned scope
+
+Reopened
+
+Authorized role
+
+Create a new report version with mandatory reason; preserve prior approved version
+
+Draft/Corporate Finance Review per reopen policy
+
+New version editable; prior version immutable
+
+
+
+3.1 Workflow Control Rules
+
+Every approval/return action records Reporting Period, Business Unit where applicable, Approval Stage, User, Role, Action, Comment/Reason, Date and Time.
+
+Maker-checker control prevents a user from approving their own submission where the same person performed the maker action.
+
+A return requires a mandatory reason and records returned by, return timestamp, previous status and new status.
+
+Relevant users receive an action notification after submission, return, review request, CFO request and publication.
+
+CFO approval locks the financial version. CEO and Board views read only from the approved snapshot, not mutable operational tables.
+
+Reopening requires an authorized user and mandatory reason, creates a new report version, and keeps the previously approved snapshot available for audit.
+
+Derived design: BU workflow instances are tracked by Reporting Period + BU; Corporate Finance and CFO operate on the consolidated report version after required BU submissions reach the configured prerequisite stage or an authorized exception is approved.
+
+3.2 Approval Gating
+
+Gate
+
+Rule
+
+Outcome
+
+Submission validation
+
+No unresolved blocking validation errors for the submitting BU/module.
+
+Block submission until corrected.
+
+Reviewer validation
+
+Reviewer can see errors, comments, attachments and exceptions in one workspace.
+
+Reviewer may approve or return based on permissions.
+
+Critical exceptions
+
+Critical exceptions block final approval unless formally overridden by an authorized user.
+
+Override reason and approver are audited.
+
+CFO approval
+
+All required consolidated data, management comments, version and exception status are presented.
+
+Approval creates immutable snapshot and lock.
+
+Publication
+
+Only CFO-approved snapshot versions may be published.
+
+CEO/Board can view only published/authorized snapshot.
+
+
+
+
+
+4. Detailed Field Mapping from Excel
+
+The mapping below converts spreadsheet concepts into structured application fields. Cell references are included where they materially explain the current calculation. Individual account worksheets are normalized into Bank Account and Bank Balance records rather than reproduced as separate application screens/tables.
+
+4.1 Treasury Dashboard FNL → Executive Dashboard / Commentary
+
+Excel Concept
+
+Excel Location / Label
+
+Target Field / Entity
+
+Class
+
+Functional Treatment
+
+Dashboard title / report date
+
+Dashboard row 4: Treasury Dashboard – 15th August 2026
+
+ReportingPeriod.ReportingDate
+
+Source
+
+Display selected approved reporting date.
+
+All amounts in Million QAR
+
+Dashboard row 6
+
+Report presentation setting
+
+Source
+
+Dashboard presents Group values in QAR millions.
+
+Funds Position / Bank Balance in QAR Currency
+
+Dashboard section rows 8-24
+
+Snapshot KPI / Funds Position
+
+Source
+
+Charts sourced from consolidated bank balances.
+
+Cash Flow Projection Aug-Oct 2026 excluding Murabaha payments
+
+Dashboard rows 26 onward
+
+CashFlowForecast + Snapshot KPI
+
+Source
+
+Current workbook is monthly; BRD Phase 1 calls for weekly forecasting.
+
+Manual supplier/LC payment note
+
+Dashboard narrative column
+
+Comment(Module=Cash Flow)
+
+Source
+
+Store as structured management commentary, not a free-floating cell.
+
+Working Capital Finance Limits and Utilisation
+
+Dashboard rows 40-74
+
+WorkingCapitalFacility/FacilityUtilization
+
+Source
+
+Includes bank and region/country views.
+
+LC & Murabaha are sub-limits of total facility
+
+Dashboard note row 41
+
+Facility hierarchy / shared limit rule
+
+Source
+
+Do not assume sanction sub-limits can be added to derive total bank facility.
+
+Short Term Loan repayment/current outstanding
+
+Dashboard rows 75 onward
+
+Loan / LoanRepayment
+
+Source
+
+Display repayment profile and current O/S by bank.
+
+Long Term Loan Repayment + manual notes
+
+Dashboard rows 101 onward
+
+LoanRepayment + Comment
+
+Source
+
+Manual narrative becomes period/module commentary.
+
+Short Term vs Long Term Loans
+
+Dashboard row 155 area
+
+Debt KPI
+
+Source
+
+STL and LTL composition.
+
+Liquid Assets to Debt: historical cost and market value
+
+Dashboard row 175 area
+
+Snapshot KPI / InvestmentValuation
+
+Source
+
+Two separate ratios with historical trend.
+
+Investment in Share Market / country-wise
+
+Dashboard row 211 onward / row 292 title
+
+Investment / InvestmentValuation
+
+Source
+
+Country dimension required for investment analysis.
+
+Fixed Deposit information
+
+Dashboard rows 225-239
+
+Investment (Type=Fixed Deposit)
+
+Source
+
+From, To, placement/renewal, maturity, rate, amount.
+
+Information on Dollar Availability
+
+Dashboard rows 242 onward
+
+Comment(Module=FX/Liquidity)
+
+Source
+
+Narrative scenario information; not a financial master record.
+
+
+
+4.2 1. Funds position → BankAccount, BankBalance, FXRate, Funds Position
+
+Excel Field / Concept
+
+Excel Location
+
+Target Entity.Field
+
+Class
+
+Rule / Transformation
+
+Bank
+
+Column A
+
+BankAccount.BankId
+
+Source
+
+Validated against Bank master.
+
+Company Name / Unit
+
+Column B
+
+BankAccount.BusinessUnitId / LegalEntityId
+
+Source
+
+Workbook uses unit codes such as ZAD, QFI, USB, ACC, GUC.
+
+Account No
+
+Column C
+
+BankAccount.AccountNumber
+
+Source
+
+String field; preserve leading zeros.
+
+Account Type
+
+Column D
+
+BankAccount.AccountType
+
+Source
+
+Examples: CUR Current, CALL ACCOUNT, CASHLINE, CMG CASH MARGIN.
+
+Branch Name
+
+Column E in QAR account block
+
+BankAccount.Branch
+
+Source
+
+Optional if absent in source statement.
+
+Currency
+
+Column F or D depending source block
+
+BankAccount.CurrencyId / BankBalance.CurrencyId
+
+Source
+
+Must match currency master.
+
+Closing balance in account currency
+
+Direct QAR amount in G or foreign amount in E
+
+BankBalance.ClosingBalance
+
+Derived
+
+Normalized to source currency before QAR conversion.
+
+FX rate
+
+Column F in foreign-currency block
+
+FXRate.ExchangeRate
+
+Source→Master
+
+Workbook hard-codes rates such as 3.65, 4.10, 2.75, 2.35. Application must use approved rate applicable to Reporting Date.
+
+QAR equivalent
+
+Column G
+
+BankBalance.ReportingCurrencyAmount
+
+Derived
+
+ClosingBalance × approved FX rate; QAR accounts use rate 1.
+
+Manual note
+
+Column H
+
+Comment / Exception / BankBalance.Note
+
+Source
+
+Examples include inactive/no-transaction notes.
+
+Total bank balance
+
+G76
+
+FundsPosition.TotalCash
+
+Derived
+
+SUM of QAR equivalent account balances.
+
+QAR currency by unit
+
+B80:C86
+
+FundsPosition by BU
+
+Derived
+
+Group by BU, QAR currency, presented in millions.
+
+QAR currency by bank
+
+B90:C98
+
+FundsPosition by Bank
+
+Derived
+
+Group by bank, QAR balances, millions.
+
+Foreign currency by bank
+
+B102:C108
+
+FundsPosition by Bank/Currency
+
+Derived
+
+Group foreign account balances; source summary is presented in millions.
+
+Bank balance as on date
+
+B115:C115
+
+Liquidity KPI.TotalCash
+
+Derived
+
+Linked from total bank balance.
+
+Liquidity reserve (FD)
+
+B116:C116
+
+LiquidityAdjustment.Amount / Investment reserve
+
+Source/TBD
+
+Current workbook uses a manual negative value. Exact business source and calculation need confirmation.
+
+Reserved working capital
+
+B117:C117
+
+LiquidityAdjustment.Amount
+
+Source/TBD
+
+Current workbook uses a manual negative value. Must be explicit adjustment with reason/approval, not hidden formula.
+
+Remaining amount
+
+B118:C118
+
+Liquidity KPI.RemainingLiquidity
+
+Derived
+
+SUM of bank balance and reserve adjustments.
+
+GUC summary manual adjustment
+
+C85 formula includes +0.8 Mn
+
+Adjustment record
+
+Source anomaly
+
+Do not hard-code. If still required, capture as a dated, approved adjustment with reason.
+
+
+
+4.3 Individual Bank/Account Worksheets → Bank Account / Balance / Source Detail
+
+Source Field
+
+Workbook Example
+
+Target
+
+Scope
+
+Functional Treatment
+
+Closing Balance
+
+Usually B2
+
+BankBalance.ClosingBalance
+
+Phase 1
+
+Primary value currently linked into Funds Position.
+
+Account Number
+
+Statement header
+
+BankAccount.AccountNumber
+
+Phase 1
+
+Preserve as text; use unique account identity with BankId.
+
+Customer / Entity / Account Name
+
+Statement header
+
+BankAccount.AccountName / LegalEntityId
+
+Phase 1
+
+Map recognized entity; unmapped names generate exception.
+
+Account Type
+
+Statement header
+
+BankAccount.AccountType
+
+Phase 1
+
+Controlled reference where possible.
+
+Currency / Amount Currency
+
+Statement header/transaction
+
+Currency.CurrencyCode
+
+Phase 1
+
+Must agree with account master.
+
+Bank Name
+
+Statement header
+
+BankAccount.BankId
+
+Phase 1
+
+Validated against Bank master.
+
+Branch / BIC / IBAN
+
+Statement header
+
+BankAccount.Branch / BIC / IBAN
+
+Phase 1
+
+IBAN masked on display based on role.
+
+Current Balance / Available Balance / Ledger Balance
+
+Statement header
+
+BankBalance balances
+
+Phase 1
+
+Closing/ledger balance selected according to approved template mapping.
+
+Statement date range / Report generated date
+
+Statement header
+
+UploadBatch.SourcePeriod / SourceGeneratedDate
+
+Phase 1
+
+Used for freshness and Reporting Date validation.
+
+Transaction Date / Booking Date / Trade Date
+
+Transaction grid
+
+BankTransaction.TransactionDate
+
+Later/optional
+
+Current Phase 1 BRD requires bank balance reporting, not bank-specific transaction parsing.
+
+Value Date / Settlement Date
+
+Transaction grid
+
+BankTransaction.ValueDate
+
+Later/optional
+
+Retain in staging/source file if transaction parsing is not enabled.
+
+Narrative / Description / Type
+
+Transaction grid
+
+BankTransaction.Description / TransactionType
+
+Later/optional
+
+Bank-specific column names normalize to common transaction model.
+
+Transaction Reference / Document # / Cheque No.
+
+Transaction grid
+
+BankTransaction.Reference
+
+Later/optional
+
+Store source reference text.
+
+Debit / Withdrawal
+
+Transaction grid
+
+BankTransaction.DebitAmount
+
+Later/optional
+
+Numeric, non-negative.
+
+Credit / Deposit
+
+Transaction grid
+
+BankTransaction.CreditAmount
+
+Later/optional
+
+Numeric, non-negative.
+
+Running Balance
+
+Transaction grid
+
+BankTransaction.RunningBalance
+
+Later/optional
+
+Can be validated against transaction sequence if parsed.
+
+Portfolio Name / Number (HSBC)
+
+HSBC source worksheets
+
+BankTransaction.SourceAttributes
+
+Later/optional
+
+Bank-specific source attribute or extension JSON if required.
+
+
+
+4.4 2. Cash flow → CashFlowForecast
+
+Excel/BRD Field
+
+Location
+
+Target
+
+Class
+
+Rule / Note
+
+Month
+
+Column B
+
+ForecastBucket.Label / StartDate / EndDate
+
+Source
+
+Current rows: Aug, Sep, Oct 2026.
+
+Cash Inflow
+
+Column C
+
+CashFlowForecast.InflowAmount
+
+Source
+
+Current workbook stores monthly aggregate.
+
+Cash Outflow
+
+Column D
+
+CashFlowForecast.OutflowAmount
+
+Source
+
+Current workbook stores monthly aggregate.
+
+Net balance
+
+Column E
+
+CashFlowForecast.NetAmount
+
+Derived
+
+Cash Inflow − Cash Outflow.
+
+Surplus / (Deficit)
+
+Column F
+
+CashFlowForecast.PositionFlag
+
+Derived
+
+Workbook uses IF(net > 0, Surplus, Deficit); zero is currently labeled Deficit.
+
+Total
+
+Row 12
+
+CashFlow summary
+
+Derived
+
+Sum forecast buckets.
+
+Cash flow categories
+
+Not present in current summary sheet; defined in BRD
+
+CashFlowCategory
+
+Source BRD
+
+Opening Cash, Collections, Operating Payments, Payroll, Capex, Debt Servicing, Intercompany, Other Inflows/Outflows, Closing Cash.
+
+Forecast frequency
+
+Excel monthly vs BRD weekly
+
+ForecastBucket.BucketType
+
+TBD
+
+Proposed implementation: Phase 1 default four weekly buckets per BRD; migrate Excel monthly summaries as legacy monthly forecast records or provide a separate monthly view.
+
+
+
+4.5 3. Working capital → WorkingCapitalFacility / FacilityUtilization
+
+Field
+
+Excel Location/Label
+
+Target
+
+Class
+
+Rule / Transformation
+
+Bank
+
+Bank sections / summary rows
+
+WorkingCapitalFacility.BankId
+
+Source
+
+QIB, Mashreq/MAI, Al Rayan, Dukhan, UBS.
+
+Facility Type
+
+LC / Murabaha / Bonds & Guarantees
+
+WorkingCapitalFacility.FacilityType
+
+Source
+
+Controlled facility type.
+
+Sanctioned Limit
+
+Sanctioned columns
+
+WorkingCapitalFacility.SanctionedLimit
+
+Source
+
+Currency-specific numeric amount.
+
+Utilised
+
+Utilised columns
+
+FacilityUtilization.UtilizedAmount
+
+Source
+
+As of Reporting Date.
+
+Under Process
+
+Under Process columns
+
+FacilityUtilization.UnderProcessAmount
+
+Source Excel
+
+Source-derived field not explicitly listed in BRD master fields; required to reproduce current workbook.
+
+Utilisation %
+
+Utilisation % columns
+
+FacilityUtilization.UtilizationPct
+
+Derived
+
+Utilized / Sanctioned where denominator > 0.
+
+Available Amount
+
+Not explicit in Excel table
+
+FacilityUtilization.AvailableAmount
+
+Source BRD
+
+Sanctioned Limit − Utilized Amount.
+
+Total facility limit
+
+Bank Total Limit rows
+
+WorkingCapitalFacility.Parent/SharedLimit
+
+Source
+
+Dashboard explicitly states LC and Murabaha limits may be sub-limits of total facility. Total is therefore not always a simple sum of sub-limits.
+
+Bank-wise summary
+
+Rows 20-28, 74 onward
+
+Dashboard aggregation
+
+Derived
+
+Utilization by Bank and facility type.
+
+Region / Country
+
+Qatar, U.A.E/Dubai, Switzerland
+
+Bank.CountryId / aggregation
+
+Source
+
+Country/region-wise facility summary and utilization.
+
+USD equivalent
+
+Top summary USD column
+
+Reporting currency conversion
+
+Derived
+
+Use FX master, not embedded 3.65.
+
+
+
+4.6 4. Loan → Loan / LoanRepayment
+
+Field
+
+Excel Location
+
+Target
+
+Class
+
+Rule / Transformation
+
+STL Bank
+
+Rows 11-15
+
+Loan.Lender / BankId
+
+Source
+
+One short-term loan exposure by bank/loan reference.
+
+STL Repayment Date
+
+Date columns e.g. 31-Aug, 30-Sep, 31-Oct 2026
+
+LoanRepayment.DueDate
+
+Source
+
+Store rows, not one column per date.
+
+STL Repayment Amount
+
+Date columns
+
+LoanRepayment.Amount
+
+Source
+
+QAR million as workbook presentation.
+
+STL Total O/S
+
+Column F
+
+Loan.CurrentOutstanding
+
+Source
+
+Current outstanding by bank.
+
+Displayed rate label
+
+e.g. QIB @ 4%
+
+Loan.InterestRate
+
+Source/TBD
+
+Workbook displays 4%; BRD requires interest type/rate/benchmark/spread.
+
+LTL Bank
+
+Column B rows 21-28
+
+Loan.Lender / BankId
+
+Source
+
+Lender.
+
+Loan description/reference
+
+Column C
+
+Loan.LoanReference / Description
+
+Source
+
+Examples MAI #1, UBS #1, DUK #1.
+
+Loan amount
+
+Column D
+
+Loan.OriginalLoanAmount
+
+Source
+
+Original amount.
+
+Tenure
+
+Column E
+
+Loan.TenureText or derived
+
+Source
+
+Prefer dates as authoritative; display derived tenure.
+
+Start Date
+
+Column F
+
+Loan.StartDate
+
+Source
+
+Valid date.
+
+End Date
+
+Column G
+
+Loan.MaturityDate
+
+Source
+
+Workbook MAI #2 has serial 12067 (~1933), an invalid anomaly that must be caught.
+
+Installment frequency
+
+Column H
+
+Loan.RepaymentFrequency
+
+Source
+
+Quarterly, Half yearly, Monthly.
+
+Paid till 2025
+
+Column I
+
+LoanRepayment historical aggregate
+
+Source
+
+Migration/history field; future system derives from repayment rows.
+
+Paid during YTD 2026
+
+Column J
+
+LoanRepayment YTD aggregate
+
+Source
+
+Derived from actual repayments after migration.
+
+Balance outstanding
+
+Column K
+
+Loan.CurrentOutstanding
+
+Derived/Source
+
+Original Loan Amount − amounts paid; workbook calculates D−I−J.
+
+Repayment schedule by year
+
+Columns L:U, years 2026-2038
+
+LoanRepayment.DueDate / Amount
+
+Source
+
+Normalize year buckets to dated repayment schedule records.
+
+Residual/reconciliation
+
+Column V on some rows
+
+Validation difference
+
+Derived
+
+Outstanding − scheduled future repayments; should be within tolerance.
+
+New long term loan
+
+Rows 27-29
+
+Loan records
+
+Source
+
+Same schema, with effective date/status.
+
+Quarterly profit/interest schedule
+
+Rows 32-41
+
+LoanInterestForecast or LoanRepayment.InterestAmount
+
+Source/TBD
+
+Workbook uses fixed expressions and FX factors; target calculation method needs business confirmation.
+
+
+
+4.7 5. Debt & Equity → Investments / Derived KPIs
+
+Field / KPI
+
+Excel Location
+
+Target
+
+Class
+
+Rule / Note
+
+Short term loan
+
+Rows 10-15
+
+Snapshot KPI.ShortTermDebt
+
+Derived
+
+Linked from short-term loan outstanding.
+
+Long term loan
+
+Rows 10-15
+
+Snapshot KPI.LongTermDebt
+
+Derived
+
+Linked from long-term balance outstanding.
+
+FD / Liquidity Reserve
+
+Rows 13-14
+
+Investment / LiquidityAdjustment
+
+Source/TBD
+
+Workbook currently contains a broken reference for Liquidity Reserve; source definition requires confirmation.
+
+Total debt
+
+Row 15
+
+Snapshot KPI.TotalBorrowings / Debt
+
+Derived
+
+Sum configured debt components.
+
+Equity opening/book value
+
+Row 17-18
+
+EquityValuation.BookValue
+
+Source
+
+Current workbook includes book value history.
+
+Dividend paid
+
+Row 18
+
+EquityValuation.DividendPaid
+
+Source
+
+Amount for valuation bridge.
+
+Fair value previous/current
+
+FV 31-Mar-26 / FV 10-Aug-26
+
+InvestmentValuation / EquityValuation
+
+Source
+
+Valuation date must be explicit.
+
+FV gain/loss
+
+Row 18
+
+InvestmentValuation.UnrealizedGainLoss
+
+Derived
+
+Current FV − previous/reference FV as defined.
+
+Avg. EBDA
+
+Row 18
+
+EquityValuation.Adjustment / metric
+
+Source/TBD
+
+Workbook label retained; exact business definition needs confirmation.
+
+Equity Book Value result
+
+Row 18
+
+EquityValuation.ClosingBookValue
+
+Derived
+
+Workbook uses opening − dividend + FV gain/loss + Avg EBDA.
+
+Debt to Equity historical series
+
+Rows 21-25
+
+SnapshotKPIHistory
+
+Source
+
+Debt, Equity, ratio by period.
+
+Debt / Equity Ratio
+
+Row 25
+
+KPI.DebtToEquity
+
+Derived
+
+Debt / Equity Book Value.
+
+Liquid Assets at Cost
+
+Rows 28-35
+
+KPI.LiquidAssetsCost
+
+Derived
+
+Cash + investment purchase cost components.
+
+Cash at bank
+
+Rows 31-32
+
+KPI.TotalCash
+
+Derived
+
+From Funds Position.
+
+Investments purchase cost - Shares
+
+Row 33
+
+Investment.AcquisitionCost aggregate
+
+Source
+
+Share investments at cost.
+
+Investments purchase cost - Metal
+
+Row 34
+
+Investment.AcquisitionCost aggregate
+
+Source
+
+Metal investment at cost.
+
+Liquid Assets / Debt at Cost
+
+Row 35
+
+KPI.LiquidAssetsToDebtCost
+
+Derived
+
+Liquid Assets at Cost / Debt.
+
+Market Value of Shares
+
+Row 43
+
+InvestmentValuation.CurrentMarketValue
+
+Source
+
+Valuation-date market value.
+
+Market Value of Metal
+
+Row 44
+
+InvestmentValuation.CurrentMarketValue
+
+Source
+
+Includes Gold/Silver detail.
+
+Liquid Assets / Debt at Market
+
+Row 45
+
+KPI.LiquidAssetsToDebtMarket
+
+Derived
+
+Liquid Assets at Market / Debt.
+
+Gold/Silver quantity, market rate, QAR amount
+
+Rows 44-47
+
+Investment.Quantity / MarketPrice / CurrentMarketValue
+
+Source
+
+Workbook converts metal value using a fixed FX factor; application uses approved FX rate.
+
+Broken references
+
+C14 and dependent KPI cells; Dashboard AK7
+
+Validation/exception
+
+Source anomaly
+
+Must be resolved by approved source mapping before migration/UAT reconciliation.
+
+
+
+4.8 6. Loan movement → LoanMovementForecast / Working Capital Applications
+
+Field
+
+Excel Location
+
+Target
+
+Class
+
+Rule / Note
+
+Loan outstanding as on 01-Aug-26
+
+Column C
+
+LoanMovementForecast.OpeningOutstanding
+
+Source
+
+Opening balance by loan/bank.
+
+Payment
+
+Monthly movement columns
+
+LoanMovementForecast.PaymentAmount
+
+Source
+
+Outflow; workbook uses negative sign.
+
+New Loan
+
+Monthly movement columns
+
+LoanMovementForecast.NewDrawdownAmount
+
+Source
+
+New borrowing/drawdown.
+
+Balance
+
+Monthly movement columns
+
+LoanMovementForecast.ClosingOutstanding
+
+Derived
+
+Opening + Payment + New Loan using workbook sign convention.
+
+Total Short-Term / Long-Term / Total Loans
+
+Total rows
+
+Debt forecast KPIs
+
+Derived
+
+Aggregate by loan type.
+
+Fixed Deposit Liquidity Reserve
+
+Rows 23-26
+
+LiquidityAdjustment / Investment
+
+Source/TBD
+
+Currently reduces net loan figure; exact reporting treatment requires confirmation.
+
+Net Loans (A+B+C)
+
+Row 26
+
+KPI.NetLoans
+
+Derived/TBD
+
+Workbook formula uses total loans plus reserve component. Definition should be approved before dashboard use.
+
+Loan by bank as on 15-Aug-2026
+
+Rows 29-35
+
+Debt by Bank KPI
+
+Derived
+
+STL + LTL by bank.
+
+QDB WC Financing RM loan approved
+
+Rows 42-50
+
+FacilityApplication / WorkingCapitalFacility
+
+Source Excel
+
+BU-level approved RM financing.
+
+QDB OPEX Applied / Approval Expected
+
+Rows 43-50
+
+FacilityApplication.AppliedAmount / ExpectedApprovalAmount
+
+Source Excel
+
+Application-stage fields not explicit in BRD; needed if current schedule is retained.
+
+QDB approved/utilized
+
+Rows 55-61
+
+FacilityUtilization
+
+Source Excel
+
+Approved and utilized by BU.
+
+
+
+5. Validation Rules
+
+Validation is performed at field entry, upload staging, submission, review, and final approval gates. Severity is configurable where appropriate. Blocking errors prevent the relevant workflow transition.
+
+Rule ID
+
+Module
+
+Field / Control
+
+Validation Rule
+
+Severity
+
+System Response
+
+VAL-001
+
+Global
+
+Reporting Period
+
+Reporting Period must exist and be open for the action.
+
+Critical
+
+Block save/import/submit as applicable.
+
+VAL-002
+
+Global
+
+Reporting Date
+
+Financial date must not exceed the controlled Reporting Date unless explicitly permitted for forecast data.
+
+Critical
+
+Block or flag future-dated operational data.
+
+VAL-003
+
+Security
+
+BU Access
+
+User may create/read/update only BUs/business areas assigned to the user role.
+
+Critical
+
+Deny access.
+
+VAL-004
+
+Global
+
+Mandatory fields
+
+Required fields cannot be null.
+
+High
+
+Block row/submit.
+
+VAL-005
+
+Global
+
+Numeric amounts
+
+Amounts/rates/quantities must be valid numeric values.
+
+High
+
+Block row.
+
+VAL-006
+
+Global
+
+Duplicate record
+
+Duplicate business keys within the same period/module are rejected or flagged.
+
+High
+
+Block duplicate.
+
+VAL-007
+
+Upload
+
+Template structure
+
+Template version/column structure must match an approved upload definition.
+
+Critical
+
+Reject upload.
+
+VAL-008
+
+Upload
+
+Unmapped master data
+
+BU, entity, bank, account, facility, loan, category and currency must map to active master records.
+
+Critical
+
+Row invalid.
+
+VAL-009
+
+Upload
+
+Row feedback
+
+Each invalid row must return row number, field and reason.
+
+High
+
+No silent failure.
+
+VAL-010
+
+Bank Balance
+
+Account active
+
+Balance date must be within account active/open/close dates.
+
+High
+
+Block/exception.
+
+VAL-011
+
+Bank Balance
+
+Currency consistency
+
+Uploaded balance currency must match Bank Account currency.
+
+High
+
+Block row.
+
+VAL-012
+
+Bank Balance
+
+Closing balance consistency
+
+When opening/debit/credit movements are provided, Closing = Opening + Credits − Debits within tolerance.
+
+High
+
+Block/exception.
+
+VAL-013
+
+Bank Balance
+
+Statement freshness
+
+Statement/source date after Reporting Date is not used automatically in approved historical position.
+
+Critical
+
+Exclude/flag.
+
+VAL-014
+
+FX
+
+Approved rate
+
+Every non-QAR balance/amount requiring conversion must have an approved applicable FX rate.
+
+Critical
+
+Block consolidation.
+
+VAL-015
+
+FX
+
+No embedded rate
+
+Business calculations may not use hard-coded exchange rates in application code/templates.
+
+Critical
+
+Configuration/build control.
+
+VAL-016
+
+Working Capital
+
+Available facility
+
+Available Amount = Sanctioned Limit − Utilized Amount.
+
+High
+
+System calculated.
+
+VAL-017
+
+Working Capital
+
+Utilization %
+
+Utilization % = Utilized / Sanctioned; handle zero denominator without division error.
+
+High
+
+System calculated.
+
+VAL-018
+
+Working Capital
+
+Over-utilization
+
+Utilized Amount > permitted limit creates High/Critical exception.
+
+Critical
+
+Blocks final approval unless authorized override.
+
+VAL-019
+
+Working Capital
+
+Facility expiry
+
+Expired facility with utilization or new transaction creates exception.
+
+High
+
+Review required.
+
+VAL-020
+
+Working Capital
+
+Shared limits
+
+Sub-limit values must not be blindly summed when facility is configured as shared/umbrella.
+
+High
+
+Use hierarchy/cap rule.
+
+VAL-021
+
+Loan
+
+Maturity date
+
+Maturity Date must be on/after Start Date.
+
+Critical
+
+Block row.
+
+VAL-022
+
+Loan
+
+Outstanding
+
+Current Outstanding must be >= 0 and not exceed relevant original/facility limit unless approved condition applies.
+
+High
+
+Block/exception.
+
+VAL-023
+
+Loan
+
+Interest rate
+
+Interest rate/benchmark/spread must be valid numeric values and within configured acceptable range.
+
+High
+
+Block/exception.
+
+VAL-024
+
+Loan
+
+Repayment information
+
+Required repayment frequency / next repayment information must exist for active loans.
+
+High
+
+Block submit.
+
+VAL-025
+
+Loan
+
+Schedule reconciliation
+
+Future repayment schedule should reconcile to current outstanding within configured tolerance.
+
+High
+
+Exception if difference.
+
+VAL-026
+
+Loan
+
+Invalid source date
+
+The workbook anomaly such as MAI #2 end-date serial 12067 must fail date plausibility validation.
+
+Critical
+
+Migration exception.
+
+VAL-027
+
+Investment
+
+Valuation date
+
+Market price requires explicit valuation date not later than Reporting Date for actual position.
+
+High
+
+Block/exception.
+
+VAL-028
+
+Investment
+
+Market value
+
+Current Market Value is system-calculated where quantity and market price basis are available; otherwise imported value requires source/reference.
+
+High
+
+Validate.
+
+VAL-029
+
+Investment
+
+Unrealized gain/loss
+
+Unrealized Gain/Loss = Current Market Value − relevant carrying/acquisition basis as configured.
+
+High
+
+System calculated after business rule confirmation.
+
+VAL-030
+
+Cash Flow
+
+Net forecast
+
+Net = Inflow − Outflow for aggregate view.
+
+High
+
+System calculated.
+
+VAL-031
+
+Cash Flow
+
+Closing cash
+
+Closing cash rolls from opening cash plus net categorized movements for the forecast bucket.
+
+High
+
+System calculated.
+
+VAL-032
+
+Cash Flow
+
+Required BU submission
+
+Missing required cash-flow submission by deadline creates exception/notification.
+
+High
+
+Workflow attention.
+
+VAL-033
+
+Workflow
+
+Maker-checker
+
+Approver cannot approve their own maker submission where maker-checker applies.
+
+Critical
+
+Block approval.
+
+VAL-034
+
+Workflow
+
+Return reason
+
+Return for correction requires a reason.
+
+High
+
+Block action.
+
+VAL-035
+
+Workflow
+
+Reopen reason
+
+Reopening an approved period requires authorized user and mandatory reason.
+
+Critical
+
+Block action.
+
+VAL-036
+
+Workflow
+
+Financial lock
+
+CFO-approved version cannot be directly edited.
+
+Critical
+
+Deny update.
+
+VAL-037
+
+Workflow
+
+Critical exception
+
+Final approval blocked while Critical exceptions remain open unless formally overridden.
+
+Critical
+
+Block approval.
+
+VAL-038
+
+Workflow
+
+Snapshot source
+
+CEO/Board dashboard must read approved/published snapshot only.
+
+Critical
+
+No operational table fallback.
+
+VAL-039
+
+Data Quality
+
+Formula/reference integrity
+
+Migration reconciliation must contain no unresolved #REF!/formula lineage gaps for fields included in production KPIs.
+
+Critical
+
+Block UAT sign-off for affected KPI.
+
+VAL-040
+
+Comments
+
+Comment deletion
+
+Workflow comments/replies cannot be permanently deleted from audit history.
+
+High
+
+Soft status only.
+
+
+
+6. Database Entities and Mappings
+
+SQL Server is the primary system of record. The logical model below replaces workbook sheets and cell references with normalized master, transaction, workflow and snapshot entities. Names are logical and may be adjusted to organizational database standards during technical design.
+
+Entity
+
+Key Fields
+
+Main Relationship
+
+Excel / BRD Mapping
+
+Scope
+
+Organization
+
+OrganizationId PK; Name; Status
+
+Parent for group structure
+
+BRD organization structure
+
+Phase 1
+
+BusinessGroup
+
+BusinessGroupId PK; OrganizationId FK; Name
+
+Organization 1:M BusinessGroup
+
+Business grouping
+
+Phase 1
+
+BusinessUnit
+
+BusinessUnitId PK; BusinessGroupId FK; Code; Name; Status
+
+BusinessGroup 1:M BU
+
+Excel unit/company codes
+
+Phase 1
+
+LegalEntity
+
+LegalEntityId PK; BusinessUnitId FK; LegalName; CountryId
+
+BU 1:M Entity
+
+Bank account / loan borrower ownership
+
+Phase 1
+
+User
+
+UserId PK; Login; PasswordHash; Active; LastLogin
+
+M:M Role, M:M BU
+
+Authentication
+
+Phase 1
+
+Role
+
+RoleId PK; Name; Active
+
+M:M User; M:M Permission
+
+BRD roles
+
+Phase 1
+
+Permission
+
+PermissionId PK; Code; Module; Action
+
+M:M Role
+
+RBAC
+
+Phase 1
+
+UserBusinessUnit
+
+UserId FK; BusinessUnitId FK; AccessScope
+
+User M:M BU
+
+BU restriction
+
+Phase 1
+
+ReportingPeriod
+
+ReportingPeriodId PK; PeriodName; ReportingDate; SubmissionStart; BUDue; ReviewDue; CFODue; Status; ClosedDate; PublishedDate
+
+1:M versions/submissions
+
+Reporting period control
+
+Phase 1
+
+ReportVersion
+
+ReportVersionId PK; ReportingPeriodId FK; VersionNo; Status; ReopenReason; ApprovedAt
+
+Period 1:M version
+
+CFO versioning
+
+Phase 1
+
+Bank
+
+BankId PK; Name; CountryId; Status
+
+1:M BankAccount/Facility
+
+Funds/WC/Loan source
+
+Phase 1
+
+BankAccount
+
+BankAccountId PK; BU/Entity/Bank FKs; Branch; AccountName; AccountNumber; MaskedNumber; IBAN; BIC; CurrencyId; AccountType; OpenDate; CloseDate; Active
+
+1:M BankBalance
+
+Individual account worksheets
+
+Phase 1
+
+BankBalance
+
+BankBalanceId PK; BankAccountId FK; ReportingPeriodId FK; BalanceDate; OpeningBalance; DebitMovement; CreditMovement; ClosingBalance; CurrencyId; QAREquivalent; Source; UploadBatchId
+
+M:1 Account/Period
+
+Funds position
+
+Phase 1
+
+BankTransaction
+
+BankTransactionId PK; AccountId; TxnDate; ValueDate; Type; Reference; Debit; Credit; RunningBalance; SourceAttributes
+
+M:1 Account
+
+Statement transaction grids
+
+Later/optional
+
+Currency
+
+CurrencyId PK; Code; Name; IsBaseCurrency
+
+1:M FX / financial records
+
+QAR, USD, EUR, CHF, CAD, AUD etc.
+
+Phase 1
+
+FXRate
+
+FXRateId PK; FromCurrencyId; ToCurrencyId; Rate; EffectiveDate; Source; EnteredBy; ApprovalStatus
+
+Currency pair/date
+
+Funds/investment conversions
+
+Phase 1
+
+WorkingCapitalFacility
+
+FacilityId PK; BU/Entity/Bank; FacilityType; FacilityReference; CurrencyId; SanctionedLimit; Interest/Benchmark/Spread; Effective/Expiry; Security; Covenant; Status; ParentFacilityId
+
+1:M Utilization
+
+Working capital sheet
+
+Phase 1
+
+FacilityUtilization
+
+FacilityUtilizationId PK; FacilityId; ReportingPeriodId; UtilizedAmount; UnderProcessAmount; AvailableAmount; UtilizationPct
+
+M:1 Facility/Period
+
+Utilisation sections
+
+Phase 1
+
+FacilityApplication
+
+FacilityApplicationId PK; BU; Bank; FacilityType; AppliedAmount; ExpectedApprovalAmount; ApprovedAmount; Status; ReportingPeriod
+
+Optional link to facility
+
+QDB application sections
+
+Phase 1 if retained; otherwise TBD
+
+Loan
+
+LoanId PK; BU/Entity; Borrower; Lender/Bank; Reference; FacilityType; Currency; OriginalAmount; CurrentOutstanding; Start; Maturity; InterestType/Rate/Benchmark/Spread; Frequency; Security; Covenant; Status
+
+1:M Repayment
+
+Loan sheet
+
+Phase 1
+
+LoanRepayment
+
+LoanRepaymentId PK; LoanId; DueDate; PrincipalAmount; InterestAmount; PaidAmount; PaidDate; Status
+
+M:1 Loan
+
+STL/LTL schedules
+
+Phase 1
+
+LoanMovementForecast
+
+MovementId PK; LoanId; ForecastDate/Bucket; OpeningOutstanding; PaymentAmount; NewDrawdown; ClosingOutstanding
+
+M:1 Loan
+
+Loan movement sheet
+
+Phase 1
+
+Investment
+
+InvestmentId PK; BU; Type; Instrument; CountryId; Quantity; AcquisitionCost; Currency; MaturityDate; Status
+
+1:M Valuation
+
+Shares/metals/FD
+
+Phase 1
+
+InvestmentValuation
+
+ValuationId PK; InvestmentId; ValuationDate; MarketPrice; CurrentMarketValue; UnrealizedGainLoss; RateSource
+
+M:1 Investment
+
+Debt & Equity / dashboard
+
+Phase 1
+
+CashFlowCategory
+
+CategoryId PK; Name; Direction; Sequence; Active
+
+1:M Forecast
+
+BRD weekly categories
+
+Phase 1
+
+CashFlowForecast
+
+ForecastId PK; PeriodId; BU; CategoryId; BucketStart; BucketEnd; BucketType; Amount; Source
+
+M:1 BU/Period/Category
+
+Cash flow
+
+Phase 1
+
+TreasurySubmission
+
+SubmissionId PK; PeriodId; ReportVersionId; BU; Status; SubmittedBy/At; CurrentStage
+
+1:M workflow/comments/exceptions
+
+BU reporting package
+
+Phase 1
+
+WorkflowInstance
+
+WorkflowInstanceId PK; SubmissionId or ReportVersionId; CurrentStage; Status
+
+1:M WorkflowAction
+
+Approval process
+
+Phase 1
+
+WorkflowAction
+
+WorkflowActionId PK; InstanceId; Stage; UserId; RoleId; Action; Comment/Reason; ActionAt; FromStatus; ToStatus
+
+M:1 Workflow
+
+Approval history
+
+Phase 1
+
+Comment
+
+CommentId PK; Period; BU; Module; RecordType/Id; ParentCommentId; User/Role; Text; CreatedAt; Status
+
+Threaded replies
+
+Management commentary/queries
+
+Phase 1
+
+Exception
+
+ExceptionId PK; Period; BU; Module; RecordType/Id; RuleId; Severity; Description; Status; OverrideBy/At/Reason
+
+Validation/workflow
+
+Exception management
+
+Phase 1
+
+UploadBatch
+
+UploadBatchId PK; Period; BU; Module; TemplateVersion; FileName; Hash; UploadedBy/At; Status; ValidRows; InvalidRows
+
+1:M UploadDetail/ValidationError
+
+Excel upload
+
+Phase 1
+
+UploadDetail
+
+UploadDetailId PK; BatchId; SourceRow; RawPayload; ImportStatus; TargetRecordId
+
+M:1 Batch
+
+Staging traceability
+
+Phase 1
+
+ValidationError
+
+ValidationErrorId PK; Batch/Record; RuleId; RowNo; Field; Message; Severity
+
+M:1 Batch/record
+
+Upload validation
+
+Phase 1
+
+Attachment
+
+AttachmentId PK; Period; BU; Module; RecordType/Id; FileName; Type; Path/BlobRef; UploadedBy/At
+
+Generic association
+
+Supporting documents
+
+Phase 1
+
+TreasurySnapshot
+
+SnapshotId PK; PeriodId; ReportVersionId; ApprovedBy/At; PublishedAt; Status; DataHash
+
+1:M SnapshotKPI/Detail
+
+Approved historical report
+
+Phase 1
+
+SnapshotKPI
+
+SnapshotKPIId PK; SnapshotId; KPIKey; DimensionType/Id; Currency; Value; DisplayValue
+
+M:1 Snapshot
+
+Executive KPIs/history
+
+Phase 1
+
+Notification
+
+NotificationId PK; User; Type; RelatedRecord; SentAt; Status; Channel
+
+Workflow trigger
+
+Email notifications
+
+Phase 1
+
+AuditLog
+
+AuditLogId PK; User; Role; Action; Module; RecordType/Id; OldValue; NewValue; Reason; Timestamp; CorrelationId
+
+Immutable log
+
+BRD audit trail
+
+Phase 1
+
+Configuration
+
+ConfigId PK; Key; Value; EffectiveDate; Status
+
+Used by rules/KPIs
+
+Thresholds/tolerances
+
+Phase 1
+
+
+
+6.1 Core Relationship Summary
+
+ReportingPeriod → ReportVersion → TreasurySnapshot establishes period versioning and immutable approved history.
+
+BusinessUnit / LegalEntity → BankAccount → BankBalance replaces the workbook pattern where each bank account has a separate worksheet and Funds Position links to B2 closing balance.
+
+Bank / BusinessUnit / LegalEntity → WorkingCapitalFacility → FacilityUtilization normalizes sanction and utilization while supporting shared/parent limits.
+
+BusinessUnit / LegalEntity → Loan → LoanRepayment and LoanMovementForecast replaces year/month columns with dated rows.
+
+BusinessUnit → Investment → InvestmentValuation supports shares, metals and fixed deposits plus cost/market dashboard ratios.
+
+BusinessUnit → CashFlowForecast by CashFlowCategory and bucket supports Group consolidation and later 13-week extension.
+
+TreasurySubmission / ReportVersion → WorkflowInstance → WorkflowAction captures approval history. Comments and Exceptions can reference any module/record.
+
+UploadBatch / UploadDetail / ValidationError preserves source-file traceability before validated rows are committed to production entities.
+
+
+
+7. Screen List
+
+Screen ID
+
+Screen
+
+Primary Roles
+
+Main Functions
+
+Scope
+
+SCR-001
+
+Login
+
+All users
+
+Username/password authentication, secure errors, session creation.
+
+Phase 1
+
+SCR-002
+
+Home / My Actions
+
+All authenticated
+
+Pending actions, deadlines, recent periods, notifications, role-based shortcuts.
+
+Phase 1
+
+SCR-003
+
+Reporting Period List
+
+Corporate Finance, CFO, Admin read
+
+Period status, reporting date, deadlines, version and publication status.
+
+Phase 1
+
+SCR-004
+
+Reporting Period Setup
+
+Corporate Finance
+
+Create/edit period dates/status until controlled lock points.
+
+Phase 1
+
+SCR-005
+
+BU Submission Workspace
+
+BU Finance User
+
+Module completeness, save draft, validate, attach, comment, submit.
+
+Phase 1
+
+SCR-006
+
+Bank Account Master List
+
+Treasury/Admin/authorized
+
+Search/filter by BU, entity, bank, currency, status.
+
+Phase 1
+
+SCR-007
+
+Bank Account Master Edit
+
+Authorized Treasury/Admin
+
+Account metadata, masking fields, activation/deactivation.
+
+Phase 1
+
+SCR-008
+
+Bank Balance Entry Grid
+
+BU Finance User/Treasury
+
+Account/date/balance entry with copy/paste and validation.
+
+Phase 1
+
+SCR-009
+
+Funds Position
+
+BU/Reviewers
+
+Cash by BU/entity/bank/account/currency, QAR equivalent, drill-down.
+
+Phase 1
+
+SCR-010
+
+FX Rate List/Edit
+
+Authorized Treasury/Corporate Finance
+
+Rate pair, effective date, source, approval status.
+
+Phase 1
+
+SCR-011
+
+Working Capital Facility List
+
+BU/Reviewers
+
+Facilities, sanction, utilization, availability, expiry.
+
+Phase 1
+
+SCR-012
+
+Working Capital Entry / Utilization
+
+BU Finance User/authorized
+
+Utilized, under process, date/source, comments.
+
+Phase 1
+
+SCR-013
+
+Loan Master List
+
+BU/Reviewers
+
+STL/LTL filtering, current O/S, maturity, next repayment.
+
+Phase 1
+
+SCR-014
+
+Loan Edit / Repayment Schedule
+
+BU/authorized
+
+Loan terms and dated repayment schedule.
+
+Phase 1
+
+SCR-015
+
+Loan Movement Forecast
+
+Corporate Finance/Treasury
+
+Opening, payments, new drawdowns and closing forecast.
+
+Phase 1
+
+SCR-016
+
+Investment List
+
+BU/Reviewers
+
+Shares, metals, fixed deposits by entity/country/type.
+
+Phase 1
+
+SCR-017
+
+Investment Valuation
+
+BU/authorized
+
+Quantity/cost, price, valuation date, market value, gain/loss.
+
+Phase 1
+
+SCR-018
+
+Cash Flow Forecast Entry
+
+BU Finance User
+
+Four-week category grid, draft/validate/submit.
+
+Phase 1
+
+SCR-019
+
+Cash Flow Consolidation
+
+Corporate Finance/CFO
+
+Group and BU forecast with liquidity impact.
+
+Phase 1
+
+SCR-020
+
+Upload Center
+
+BU Finance User/authorized
+
+Template download/upload, batch status and history.
+
+Phase 1
+
+SCR-021
+
+Upload Validation Results
+
+Uploader/Reviewers
+
+Valid/invalid counts, row/field/reason, correction status.
+
+Phase 1
+
+SCR-022
+
+Comments & Queries Panel
+
+Workflow users
+
+Threaded comments tied to period/BU/module/record.
+
+Phase 1
+
+SCR-023
+
+Exception Register
+
+Reviewers/CFO
+
+Severity, owner, record, status, override workflow.
+
+Phase 1
+
+SCR-024
+
+BU Finance Review Workspace
+
+BU Finance Head
+
+Submission summary, errors, comments, KPI changes, approve/return.
+
+Phase 1
+
+SCR-025
+
+Business Head Review Workspace
+
+Business Head
+
+Business view, commentary, approve/return.
+
+Phase 1
+
+SCR-026
+
+Corporate Finance Review Workspace
+
+Corporate Finance
+
+All BUs, consolidation, missing submissions, exceptions, prior-period variance, approve/return.
+
+Phase 1
+
+SCR-027
+
+CFO Review Workspace
+
+CFO
+
+Executive KPIs, exceptions, comments, drill-down, final approve/return.
+
+Phase 1
+
+SCR-028
+
+Executive Treasury Dashboard
+
+CFO/CEO/Board according to status
+
+Approved/published snapshot KPIs and commentary.
+
+Phase 1
+
+SCR-029
+
+Dashboard Drill-Down
+
+Authorized dashboard users
+
+Total Cash → BU → Entity → Bank → Account and equivalent drill paths.
+
+Phase 1
+
+SCR-030
+
+Historical Reports
+
+Authorized
+
+Approved snapshots by period/version and comparison views.
+
+Phase 1
+
+SCR-031
+
+Export Center
+
+Authorized
+
+Excel/PDF approved report export with metadata.
+
+Phase 1
+
+SCR-032
+
+User / Role / BU Administration
+
+System Admin
+
+User, role, permission and BU mapping.
+
+Phase 1
+
+SCR-033
+
+Reference Data Administration
+
+Authorized Admin/Treasury
+
+Banks, currencies, countries, categories, thresholds.
+
+Phase 1
+
+SCR-034
+
+Audit Explorer
+
+Internal Audit/authorized
+
+Search by period, user, module, action, record; old/new values.
+
+Phase 1
+
+SCR-035
+
+Notification History
+
+Users/Admin support
+
+Sent/pending/failed workflow notifications.
+
+Phase 1
+
+SCR-036
+
+13-Week Forecast
+
+BU/Corporate/CFO
+
+Advanced 13-week forecast entry/analysis.
+
+Later
+
+SCR-037
+
+Scenario / Forecast Accuracy
+
+Corporate/CFO
+
+Scenario comparison and forecast accuracy.
+
+Later
+
+
+
+8. Dashboard KPIs
+
+All CEO/Board KPIs must be calculated from the CFO-approved snapshot. Where the exact business formula is not defined by the sources, the KPI is marked TBD and must be confirmed before UAT reconciliation.
+
+KPI ID
+
+KPI
+
+Calculation / Definition
+
+Primary Data
+
+Drill-Down
+
+Status
+
+KPI-001
+
+Total Cash
+
+Sum approved bank balances converted to QAR as at Reporting Date.
+
+BankBalance + FXRate
+
+BU → Entity → Bank → Account
+
+Source
+
+KPI-002
+
+Cash by BU
+
+Total Cash grouped by Business Unit.
+
+BankBalance
+
+BU → Entity → Bank → Account
+
+Source
+
+KPI-003
+
+Cash by Bank
+
+Total Cash grouped by Bank.
+
+BankBalance
+
+Bank → Account
+
+Source Excel
+
+KPI-004
+
+Cash by Currency
+
+Source-currency closing balances and QAR equivalent grouped by currency.
+
+BankBalance + FXRate
+
+Currency → BU/Account
+
+Source
+
+KPI-005
+
+Available Working Capital
+
+Sum facility Available Amount subject to shared-limit hierarchy.
+
+FacilityUtilization
+
+Country → Bank → Facility Type → Facility
+
+Source
+
+KPI-006
+
+Working Capital Utilization %
+
+Utilized / sanctioned for applicable facility or parent limit.
+
+FacilityUtilization
+
+Bank / Facility Type
+
+Source Excel
+
+KPI-007
+
+Total Available Liquidity
+
+Exact formula not defined. BRD requires KPI; current workbook separately shows bank balance, liquidity reserve, reserved working capital and WC facilities.
+
+Cash + WC + adjustments
+
+BU / source components
+
+TBD
+
+KPI-008
+
+Minimum Liquidity Threshold
+
+Configured approved minimum threshold.
+
+Configuration
+
+Group / BU if configured
+
+Source BRD; formula TBD
+
+KPI-009
+
+Liquidity Headroom
+
+Proposed: Total Available Liquidity − Minimum Liquidity Threshold.
+
+Snapshot KPI + Configuration
+
+Group / BU
+
+Derived; confirm
+
+KPI-010
+
+Total Borrowings
+
+Short-Term Debt + Long-Term Debt (configured debt components).
+
+Loan
+
+Type → Bank → Loan
+
+Source
+
+KPI-011
+
+Short-Term Debt
+
+Sum current outstanding for short-term loans.
+
+Loan
+
+Bank → Loan
+
+Source
+
+KPI-012
+
+Long-Term Debt
+
+Sum current outstanding for long-term loans.
+
+Loan
+
+Bank → Loan
+
+Source
+
+KPI-013
+
+Net Debt
+
+BRD requires KPI but formula is not specified; workbook contains a separate “Net Loans” concept using liquidity reserve.
+
+Loan + cash/liquid assets as approved
+
+Component drill-down
+
+TBD
+
+KPI-014
+
+Debt Maturity Profile
+
+Scheduled principal by future month/quarter/year.
+
+LoanRepayment
+
+Period → Loan → Bank
+
+Source
+
+KPI-015
+
+Upcoming Repayments
+
+Principal/interest due within configured near-term horizon.
+
+LoanRepayment
+
+Due date → Loan
+
+Source
+
+KPI-016
+
+Average Cost of Borrowing
+
+BRD requires KPI; exact weighted-average basis is not defined.
+
+Loan interest fields
+
+Bank / Loan
+
+TBD
+
+KPI-017
+
+4-Week Cash Flow Forecast
+
+Weekly forecast by approved categories and BU.
+
+CashFlowForecast
+
+Week → BU → Category
+
+Source BRD
+
+KPI-018
+
+Expected Collections / Payments
+
+Sum inflow/outflow categories for each forecast bucket.
+
+CashFlowForecast
+
+Week → BU → Category
+
+Source
+
+KPI-019
+
+Closing Cash Projection
+
+Opening cash + forecast net movement.
+
+CashFlowForecast
+
+Week → BU
+
+Source BRD
+
+KPI-020
+
+Liquidity Gap
+
+BRD requires KPI; proposed to compare projected closing liquidity with approved threshold.
+
+Cash Flow + threshold
+
+Week → BU
+
+TBD
+
+KPI-021
+
+Investment Value at Cost
+
+Aggregate acquisition/carrying cost for included liquid investments.
+
+Investment
+
+Type → Country → Instrument
+
+Source Excel
+
+KPI-022
+
+Investment Market Value
+
+Latest approved valuation value as at Reporting Date.
+
+InvestmentValuation
+
+Type → Country → Instrument
+
+Source
+
+KPI-023
+
+Unrealized Gain/Loss
+
+Current Market Value − approved carrying/acquisition basis.
+
+InvestmentValuation
+
+Type → Instrument
+
+Source
+
+KPI-024
+
+Debt to Equity Ratio
+
+Debt / Equity Book Value.
+
+Loan + Equity valuation
+
+Historical period
+
+Source Excel
+
+KPI-025
+
+Liquid Assets to Debt at Cost
+
+Liquid Assets at historical cost / Debt.
+
+Cash + Investment cost + Debt
+
+Historical period
+
+Source Excel
+
+KPI-026
+
+Liquid Assets to Debt at Market
+
+Liquid Assets at market value / Debt.
+
+Cash + Investment market + Debt
+
+Historical period
+
+Source Excel
+
+KPI-027
+
+BU Working Capital Usage
+
+Utilized facility by BU.
+
+FacilityUtilization
+
+BU → Bank → Facility
+
+Source
+
+KPI-028
+
+BU Contribution to Group Position
+
+BRD requires BU contribution; exact numerator varies by KPI. Proposed to show BU cash/liquidity as percentage of Group.
+
+Snapshot KPI dimensions
+
+BU
+
+TBD per KPI
+
+KPI-029
+
+Major Currency Exposure
+
+Currency-wise cash and debt; net exposure calculation requires approved definition.
+
+BankBalance + Loan + FXRate
+
+Currency → BU
+
+Source/TBD
+
+KPI-030
+
+Open Exceptions
+
+Count by severity/status plus critical blocking items.
+
+Exception
+
+Severity → Module → BU
+
+Source
+
+KPI-031
+
+Submission Status
+
+BUs submitted/pending and current approval stage.
+
+TreasurySubmission/Workflow
+
+BU
+
+Source
+
+
+
+8.1 Dashboard Presentation Rules
+
+Default financial presentation is QAR millions, matching the current Treasury Dashboard, with source currency available on drill-down.
+
+Dashboard filters include Reporting Period, BU, Legal Entity, Bank, Currency, Facility, Loan, Status and Approval Stage where relevant.
+
+CEO sees CFO-approved dashboards; Board sees only information explicitly published for Board distribution.
+
+Dashboard commentary is sourced from workflow comments designated for management/executive display.
+
+Trend visuals use approved historical snapshots so prior periods are reproducible even if operational master data later changes.
+
+9. Audit Requirements
+
+Audit ID
+
+Event
+
+Minimum Data Captured
+
+Control
+
+AUD-001
+
+User Login
+
+User, role, login time, outcome where required.
+
+Immutable
+
+AUD-002
+
+Data Creation
+
+Module, record key, user/role, created values, timestamp.
+
+Immutable
+
+AUD-003
+
+Data Modification
+
+Old value, new value, module, record, user/role, timestamp.
+
+Immutable
+
+AUD-004
+
+Deletion / Deactivation
+
+Record, prior state, new inactive state, user/role, reason where applicable.
+
+No hard-delete of audit
+
+AUD-005
+
+File Upload
+
+File name, template version, period, BU, module, uploader, hash/reference, valid/invalid counts, timestamp.
+
+Immutable
+
+AUD-006
+
+Validation
+
+Rule, record/row, severity, result, timestamp; retain resolved status history.
+
+Immutable
+
+AUD-007
+
+Submission
+
+Period, BU, version, submitter, prior/new status, timestamp.
+
+Immutable
+
+AUD-008
+
+Approval
+
+Period, BU/group scope, stage, approver, role, comment, date/time, status transition.
+
+Immutable
+
+AUD-009
+
+Return / Rejection
+
+Returned by, date/time, mandatory reason, previous/new status.
+
+Immutable
+
+AUD-010
+
+Comment / Reply
+
+Period, BU, module, record, reviewer/user, role, text, date/time; never permanently delete.
+
+Immutable history
+
+AUD-011
+
+Exception Override
+
+Exception, severity, override user/role, reason, date/time, status.
+
+Immutable
+
+AUD-012
+
+Reopen
+
+Period/version, authorized user, mandatory reason, date/time, prior approved version reference.
+
+Immutable
+
+AUD-013
+
+CFO Approval & Lock
+
+CFO, approved version, approval time, snapshot identifier/hash, lock status.
+
+Immutable
+
+AUD-014
+
+Publication
+
+Snapshot/version, published by, published date/time, audience scope.
+
+Immutable
+
+AUD-015
+
+Export
+
+Proposed: record report type, period/version, generated by/at and output format for controlled reports.
+
+Derived
+
+AUD-016
+
+Master Data Change
+
+Bank/account/facility/loan/category/FX/config old/new values and effective status.
+
+Immutable
+
+
+
+9.1 Audit Functional Controls
+
+Audit records must be append-only from the application perspective and not editable by normal users or System Administrator screens.
+
+Audit Explorer must filter by Reporting Period, BU, module, record, user, role, action and date/time.
+
+Each material data update should share a correlation/transaction identifier with the originating upload, web action or workflow action where applicable.
+
+Approved snapshot/version history must allow auditors to reconstruct the exact CFO-approved position.
+
+Retention period, archival policy, and whether login IP/device details are required are not specified in the BRD and remain TBD with IT/Internal Audit.
+
+10. Phase 1 versus Later-Phase Scope
+
+Capability
+
+Scope
+
+Basis / Note
+
+User/Role/BU access
+
+Phase 1
+
+BRD Phase 1
+
+Reporting Period Management
+
+Phase 1
+
+BRD Phase 1
+
+Bank Account Master
+
+Phase 1
+
+BRD Phase 1
+
+Bank Balance Entry / Standardized Upload
+
+Phase 1
+
+BRD Phase 1
+
+Funds Position
+
+Phase 1
+
+BRD Phase 1
+
+FX Rate Management
+
+Phase 1
+
+BRD Phase 1
+
+Working Capital
+
+Phase 1
+
+BRD Phase 1
+
+Loan Schedule and Repayments
+
+Phase 1
+
+BRD Phase 1
+
+Loan Movement / debt movement schedule
+
+Phase 1
+
+Required to reproduce workbook reporting; derived functional module
+
+Debt & Equity Investments
+
+Phase 1
+
+BRD Phase 1
+
+Four-week Cash Flow Forecast
+
+Phase 1
+
+BRD Phase 1
+
+Excel Upload / Staging / Validation
+
+Phase 1
+
+BRD Phase 1
+
+Workflow / comments / exceptions
+
+Phase 1
+
+BRD Phase 1
+
+Audit Trail
+
+Phase 1
+
+BRD Phase 1
+
+CFO Approval / Lock / Version / Snapshot
+
+Phase 1
+
+BRD Phase 1
+
+Executive Dashboard / CEO / Board
+
+Phase 1
+
+BRD Phase 1
+
+Excel / PDF Export
+
+Phase 1
+
+BRD Phase 1
+
+Historical Reporting
+
+Phase 1
+
+Initial project scope and acceptance criteria
+
+Corporate email notifications
+
+Phase 1
+
+BRD notification requirement
+
+Bank-specific automatic statement transaction parsing
+
+Later / optional
+
+Not explicitly required in Phase 1; current workbook mainly links closing balances into Funds Position
+
+13-Week Advanced Cash Forecast
+
+Later
+
+BRD Later Phase
+
+Forecast Accuracy Analysis
+
+Later
+
+BRD Later Phase
+
+Treasury Scenario Planning
+
+Later
+
+BRD Later Phase
+
+Covenant Monitoring
+
+Later
+
+BRD Later Phase
+
+Automated Liquidity Alerts
+
+Later
+
+BRD Later Phase
+
+Advanced Analytics
+
+Later
+
+BRD Later Phase
+
+Mobile Access
+
+Later
+
+BRD Later Phase
+
+Microsoft Teams notifications
+
+Later
+
+BRD future integration consideration
+
+
+
+11. Open Design Items / Business Confirmation Required
+
+ID
+
+Topic
+
+Source Gap / Observation
+
+Required Decision
+
+OD-01
+
+Cash flow frequency
+
+Excel uses monthly Aug-Oct forecast; BRD says Phase 1 weekly four-week forecast.
+
+Confirm migration/display treatment of current monthly view.
+
+OD-02
+
+Total Available Liquidity formula
+
+BRD names KPI but does not give formula; Excel separately shows cash, reserve adjustments and WC limits.
+
+Approve exact component formula.
+
+OD-03
+
+Net Debt / Net Loans
+
+BRD requires Net Debt; Excel has Net Loans influenced by liquidity reserve.
+
+Approve definition and whether cash/liquid investments reduce debt.
+
+OD-04
+
+Average Cost of Borrowing
+
+BRD requires KPI; workbook shows some 4% labels but no complete weighted methodology.
+
+Approve weighting and inclusion rules.
+
+OD-05
+
+Liquidity Gap
+
+KPI exists in BRD but exact threshold/reference method is not defined.
+
+Approve calculation.
+
+OD-06
+
+Currency Exposure
+
+BRD requires cash/debt/exposure by currency; net exposure formula is not defined.
+
+Approve exposure definition and hedging treatment if any.
+
+OD-07
+
+Working capital shared limits
+
+Workbook states LC and Murabaha can be sub-limits of total facility.
+
+Confirm parent/shared-limit structure per bank/facility.
+
+OD-08
+
+Liquidity reserve and reserved WC
+
+Current Funds Position uses manual deductions; Debt & Equity contains broken liquidity reserve link.
+
+Identify authoritative source and approval owner.
+
+OD-09
+
+Workbook broken references
+
+Dashboard AK7 and Debt & Equity C14/dependent cells contain #REF! errors.
+
+Resolve source lineage before migration/UAT reconciliation.
+
+OD-10
+
+Manual GUC +0.8 Mn adjustment
+
+Funds Position summary contains a hard-coded +0.8 Mn adjustment.
+
+Confirm business rationale; model as explicit approved adjustment if retained.
+
+OD-11
+
+MAI #2 maturity date anomaly
+
+Loan sheet contains an end-date serial equivalent to 1933, inconsistent with 2026 start.
+
+Correct authoritative maturity date.
+
+OD-12
+
+Treasury Team permissions
+
+BRD identifies Treasury Team responsibility but does not fully specify create/approve master-data permissions.
+
+Approve segregation-of-duties matrix.
+
+OD-13
+
+Internal Audit detailed access
+
+BRD identifies Internal Audit role but detailed screen/export rights are not specified.
+
+Approve audit access matrix.
+
+OD-14
+
+Historical migration range
+
+BRD states migration requirement will be finalized during implementation planning.
+
+Confirm periods/years and source-quality requirements.
+
+OD-15
+
+Tolerance/threshold values
+
+Validation rules need tolerances for reconciliation, rate bounds, over-utilization severity and liquidity thresholds.
+
+Configure after Finance approval.
+
+OD-16
+
+Publication control
+
+BRD distinguishes CFO Approved and Published but exact role permitted to publish is not explicit.
+
+Confirm Corporate Finance vs CFO publication authority.
+
+
+
+Appendix A. Excel Worksheet Inventory and Target Mapping
+
+Excel Worksheet
+
+Target Application Mapping
+
+Treasury Dashboard FNL
+
+Executive Dashboard / snapshot presentation
+
+1. Funds position
+
+Funds Position / Bank Balance consolidation
+
+2. Cash flow
+
+Cash Flow Forecast
+
+3. Working capital
+
+Working Capital Facilities
+
+4. Loan
+
+Loans / Repayments
+
+5. Debt & Equity
+
+Debt/Equity/Investments KPIs
+
+6. Loan movement
+
+Loan Movement Forecast / QDB WC financing
+
+7. Cash flow unit wise detailed
+
+Cash Flow detailed source; sheet has no extractable used range in current workbook and requires business confirmation
+
+HSBC - CAD
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+HSBC - USD
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+UBS - CAD
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+UBS - USD
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-0222-0168686-001-0010-000
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+AUTO M-100002593758
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+NFC-100000792904
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+USB-100001870634
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+USB-100001870621
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+USB-100000792506
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ALC-100000841415
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ASP-100001845559
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+AMC-100001872603
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+AMC-100000819104
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFT-100001870728
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFM-1000001870702
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFM-100001870618
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFM-100000832880
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFT-100000185812
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-200001066225
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-200000597452
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-1000002781078
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-100000484005
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-100000182792
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-0003177700001
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-0003177700004
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-11941000032
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-29000000712
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-19120001103
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ZAD-0111051730026
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFI-100001870692
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFI-100001870689
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFI-100000832877
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+QFI-100000780301
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+UNB-100001798347
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ACC-100001870650
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ACC-100000827646
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ACC-100000279773
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+ACC-100001870647
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+GUC-100000824416
+
+Bank Account / Bank Balance source worksheet; transaction detail retained in upload source/staging in Phase 1
+
+
+
+Appendix B. Key Excel Reconciliation Observations
+
+Funds Position currently depends on one worksheet per bank account and commonly retrieves closing balance from cell B2. The target design replaces this with BankAccount and BankBalance rows.
+
+Foreign-currency conversions in Funds Position use embedded rates such as USD 3.65, EUR/CHF 4.10, CAD 2.75 and AUD 2.35; another formula in Debt & Equity uses 3.645. Phase 1 must centralize these in approved FX Rate Master records.
+
+The current workbook contains broken #REF! references in the executive dashboard and Debt & Equity calculations. Affected KPIs must not be accepted as migrated baseline values until the source is corrected and reconciled.
+
+The dashboard contains multiple manually updated narrative areas. These should be implemented as structured comments tied to Reporting Period, module, BU/Group context, user, role and timestamp.
+
+Working-capital dashboard commentary explicitly states that LC and Murabaha limits are sub-limits of total facility limits. The data model must support parent/shared limits and should not infer total sanction by simple addition.
+
+The application should preserve Excel as an upload/export/reconciliation aid but SQL Server must become the authoritative source after validated import and workflow approval.
+
+End of Functional Specification Document v0.1
+
+FSD v0.1  |  Draft for Functional Design  |  01 Sep 2026
+
+Page 
+
+FSD v0.1  |  Draft for Functional Design  |  01 Sep 2026
+
+Page 
+
+FSD v0.1  |  Draft for Functional Design  |  01 Sep 2026
+
+Page

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
+  <title>Treasury Dashboard | 15 Aug 2026</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">T</div>
+        <div>
+          <div class="brand-title">Treasury</div>
+          <div class="brand-subtitle">Offline Dashboard</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="dashboard"><span>⌂</span> Executive Dashboard</button>
+        <button class="nav-item" data-view="funds"><span>▣</span> Funds Position</button>
+        <button class="nav-item" data-view="cashflow"><span>↕</span> Cash Flow</button>
+        <button class="nav-item" data-view="workingcapital"><span>◫</span> Working Capital</button>
+        <button class="nav-item" data-view="loans"><span>▤</span> Loans</button>
+        <button class="nav-item" data-view="debt"><span>◎</span> Debt & Liquidity</button>
+        <button class="nav-item" data-view="movement"><span>⌁</span> Loan Movement</button>
+        <button class="nav-item" data-view="workflow"><span>✓</span> Comments & Approval</button>
+        <button class="nav-item" data-view="data"><span>✎</span> Data Input</button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="small-label">Source workbook</div>
+        <div class="source-name">Treasury report as on 15Aug2026.xlsx</div>
+        <div class="offline-pill">● Offline ready</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-btn mobile-only" id="menuBtn" aria-label="Menu">☰</button>
+        <div>
+          <h1 id="pageTitle">Executive Treasury Dashboard</h1>
+          <p id="pageSubtitle">Position as on 15 August 2026 · Amounts in QAR million unless stated</p>
+        </div>
+        <div class="top-actions">
+          <label class="role-select-wrap">Role
+            <select id="roleSelect">
+              <option>BU Data Entry</option>
+              <option>BU Finance Head</option>
+              <option>Business Head</option>
+              <option>Corporate Finance</option>
+              <option>CFO</option>
+              <option>CEO / Board</option>
+            </select>
+          </label>
+          <button class="secondary-btn" id="exportBtn">Export Data</button>
+        </div>
+      </header>
+
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
