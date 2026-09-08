@@ -211,7 +211,9 @@ app.post('/api/data', async (req, res) => {
 // Serve static frontend files for production
 const path = require('path');
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
-app.get('*', (req, res) => {
+
+// Fallback for React Router
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
