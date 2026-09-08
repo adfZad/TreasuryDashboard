@@ -4,22 +4,24 @@ const sql = require('mssql');
 // We read from the environment variable instead of hardcoding credentials for security.
 const connectionString = process.env.CUSTOMCONNSTR_TreasuryDB || process.env.DB_CONNECTION_STRING;
 
-if (!connectionString) {
-  console.warn("WARNING: No connection string found. Please set DB_CONNECTION_STRING or CUSTOMCONNSTR_TreasuryDB in your environment variables/Azure App Settings.");
-}
+let poolPromise;
 
-const poolPromise = connectionString 
-  ? new sql.ConnectionPool(connectionString)
-      .connect()
-      .then(pool => {
-        console.log('Connected to Azure SQL Database');
-        return pool;
-      })
-      .catch(err => {
-        console.log('Database Connection Failed! Bad Config: ', err);
-        throw err;
-      })
-  : Promise.reject(new Error("Database not configured. Connection string is missing."));
+if (connectionString) {
+  poolPromise = new sql.ConnectionPool(connectionString)
+    .connect()
+    .then(pool => {
+      console.log('Connected to Azure SQL Database');
+      return pool;
+    })
+    .catch(err => {
+      console.log('Database Connection Failed! Bad Config: ', err);
+      // Return null instead of throwing to prevent a fatal global UnhandledPromiseRejection crash
+      return null; 
+    });
+} else {
+  console.warn("WARNING: No connection string found. Please set DB_CONNECTION_STRING or CUSTOMCONNSTR_TreasuryDB in your environment variables/Azure App Settings.");
+  poolPromise = Promise.resolve(null);
+}
 
 module.exports = {
   sql, poolPromise
