@@ -1,8 +1,8 @@
 const sql = require('mssql');
 
-// In production, Azure injects connection strings as CUSTOMCONNSTR_<Name>
+// In production, Azure injects connection strings as CUSTOMCONNSTR_<Name> or SQLAZURECONNSTR_<Name>
 // We read from the environment variable instead of hardcoding credentials for security.
-const connectionString = process.env.CUSTOMCONNSTR_TreasuryDB || process.env.DB_CONNECTION_STRING;
+const connectionString = process.env.SQLAZURECONNSTR_TreasuryDB || process.env.CUSTOMCONNSTR_TreasuryDB || process.env.DB_CONNECTION_STRING;
 
 let poolPromise;
 
