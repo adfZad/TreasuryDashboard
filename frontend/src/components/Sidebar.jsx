@@ -1,7 +1,14 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const Sidebar = () => {
+  const { user, logout } = useContext(AuthContext);
+  const role = user?.role || 'VIEWER';
+
+  const canEdit = ['BU_FINANCE_USER', 'BU_FINANCE_HEAD', 'BUSINESS_HEAD', 'CORP_FINANCE', 'CFO'].includes(role);
+  const canApprove = ['BU_FINANCE_HEAD', 'BUSINESS_HEAD', 'CORP_FINANCE', 'CFO'].includes(role);
+
   return (
     <aside className="sidebar" id="sidebar">
       <div className="brand">
@@ -19,9 +26,31 @@ const Sidebar = () => {
         <NavLink to="/loans" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>▤</span> Loans</NavLink>
         <NavLink to="/debt" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>◎</span> Debt & Liquidity</NavLink>
         <NavLink to="/movement" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>⌁</span> Loan Movement</NavLink>
-        <NavLink to="/workflow" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>✓</span> Comments & Approval</NavLink>
-        <NavLink to="/data" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>✎</span> Data Input</NavLink>
+        
+        {canApprove && (
+          <NavLink to="/workflow" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>✓</span> Workflow Inbox</NavLink>
+        )}
+        
+        {canEdit && (
+          <NavLink to="/data" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}><span>✎</span> Data Input</NavLink>
+        )}
       </nav>
+      
+      <div style={{ padding: '1.5rem', marginTop: 'auto', borderTop: '1px solid #e2e8f0' }}>
+        <button 
+          onClick={logout}
+          style={{ 
+            display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%', 
+            padding: '0.75rem 1rem', borderRadius: '0.5rem', border: 'none', 
+            backgroundColor: '#fee2e2', color: '#b91c1c', cursor: 'pointer',
+            fontWeight: '600', fontSize: '0.875rem', transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fecaca'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+        >
+          <span style={{ fontSize: '1.25rem' }}>⎋</span> Logout
+        </button>
+      </div>
     </aside>
   );
 };

@@ -23,6 +23,11 @@ const Funds = () => {
   const COLORS = ['#4F46E5', '#10B981', '#F59E0B', '#8B5CF6'];
   const chartData = balances.map(b => ({ name: b.BankName, value: b.ClosingBalance }));
 
+  const formatNum = (num, digits = 2) => {
+    if (num === null || num === undefined || isNaN(num)) return '0.00';
+    return new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: digits }).format(num);
+  };
+
   return (
     <div>
       <div className="section-heading">
@@ -36,7 +41,7 @@ const Funds = () => {
             <div className="kpi-label">Total Cash</div>
             <div className="kpi-icon">▣</div>
           </div>
-          <div className="kpi-value">{total.toFixed(2)} QAR</div>
+          <div className="kpi-value">{formatNum(total)} QAR</div>
           <div className="kpi-sub">Total across {balances.length} accounts</div>
         </div>
       </div>

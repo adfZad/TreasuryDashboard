@@ -23,14 +23,19 @@ const Dashboard = () => {
             loans: responses[4].data.loans || [],
             debt: responses[5].data.kpi || {}
         });
-        setLoading(false);
     }).catch(err => {
         console.error(err);
+    }).finally(() => {
         setLoading(false);
     });
   }, []);
 
   if (loading || !data) return <div className="empty animate-pulse-dot">Loading Dashboard...</div>;
+
+  const formatNum = (num, digits = 2) => {
+    if (num === null || num === undefined || isNaN(num)) return '0.00';
+    return new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: digits }).format(num);
+  };
 
   const { kpi, funds, cashflow, wc, loans, debt } = data;
 
@@ -83,12 +88,12 @@ const Dashboard = () => {
   return (
     <div>
       <div className="kpi-grid">
-        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Bank Balance</div><div className="kpi-icon" style={{color:'var(--blue)'}}>▣</div></div><div className="kpi-value">{totalBank.toFixed(2)}</div><div className="kpi-foot">Current total bank balance</div></div>
-        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Available Funds</div><div className="kpi-icon" style={{color:'var(--green)'}}>◉</div></div><div className="kpi-value good">{availableFunds.toFixed(2)}</div><div className="kpi-foot">After liquidity and WC reserves</div></div>
-        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">WC Utilisation</div><div className="kpi-icon" style={{color:'var(--danger)'}}>◫</div></div><div className="kpi-value">{wcUtilPct.toFixed(1)}%</div><div className="kpi-foot">{kpi?.wcUtilized?.toFixed(1)} used of {kpi?.wcSanctioned?.toFixed(1)}</div></div>
-        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Total Loans</div><div className="kpi-icon">▤</div></div><div className="kpi-value">{totalLoans.toFixed(2)}</div><div className="kpi-foot">STL {stl.toFixed(0)} · LTL {ltl.toFixed(0)}</div></div>
-        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Debt / Equity</div><div className="kpi-icon">◎</div></div><div className="kpi-value">{debtEquity}x</div><div className="kpi-foot">Equity book value {kpi?.totalEquity?.toFixed(1) || 0}</div></div>
-        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">3 Month Net Cash</div><div className="kpi-icon" style={{color:'var(--text)'}}>↕</div></div><div className={`kpi-value ${netCash >= 0 ? 'good' : 'bad'}`}>{netCash > 0 ? '+' : ''}{netCash.toFixed(2)}</div><div className="kpi-foot">Aug to Oct excluding Murabaha</div></div>
+        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Bank Balance</div><div className="kpi-icon" style={{color:'var(--blue)'}}>▣</div></div><div className="kpi-value">{formatNum(totalBank)}</div><div className="kpi-foot">Current total bank balance</div></div>
+        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Available Funds</div><div className="kpi-icon" style={{color:'var(--green)'}}>◉</div></div><div className="kpi-value good">{formatNum(availableFunds)}</div><div className="kpi-foot">After liquidity and WC reserves</div></div>
+        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">WC Utilisation</div><div className="kpi-icon" style={{color:'var(--danger)'}}>◫</div></div><div className="kpi-value">{formatNum(wcUtilPct, 1)}%</div><div className="kpi-foot">{formatNum(kpi?.wcUtilized, 1)} used of {formatNum(kpi?.wcSanctioned, 1)}</div></div>
+        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Total Loans</div><div className="kpi-icon">▤</div></div><div className="kpi-value">{formatNum(totalLoans)}</div><div className="kpi-foot">STL {formatNum(stl, 0)} · LTL {formatNum(ltl, 0)}</div></div>
+        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">Debt / Equity</div><div className="kpi-icon">◎</div></div><div className="kpi-value">{formatNum(debtEquity)}x</div><div className="kpi-foot">Equity book value {formatNum(kpi?.totalEquity, 1)}</div></div>
+        <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">3 Month Net Cash</div><div className="kpi-icon" style={{color:'var(--text)'}}>↕</div></div><div className={`kpi-value ${netCash >= 0 ? 'good' : 'bad'}`}>{netCash > 0 ? '+' : ''}{formatNum(netCash)}</div><div className="kpi-foot">Aug to Oct excluding Murabaha</div></div>
       </div>
 
       <div className="grid-2">
@@ -119,7 +124,7 @@ const Dashboard = () => {
               <div className="card-title">Cash Flow Projection</div>
               <div className="card-subtitle">August to October 2026</div>
             </div>
-            <span className={`badge ${netCash >= 0 ? 'green' : 'red'}`}>Net {netCash > 0 ? '+' : ''}{netCash.toFixed(0)}</span>
+            <span className={`badge ${netCash >= 0 ? 'green' : 'red'}`}>Net {netCash > 0 ? '+' : ''}{formatNum(netCash)}</span>
           </div>
           <div style={{ height: 260, width: '100%' }}>
             <ResponsiveContainer>
@@ -181,9 +186,9 @@ const Dashboard = () => {
                 </ResponsiveContainer>
             </div>
             <div style={{ flex: 1 }}>
-                <div className="metric-row"><span className="metric-name">Short term loans</span><span className="metric-value">{stl.toFixed(0)}</span></div>
-                <div className="metric-row"><span className="metric-name">Long term loans</span><span className="metric-value">{ltl.toFixed(0)}</span></div>
-                <div className="metric-row"><span className="metric-name">Current total</span><span className="metric-value font-bold">{totalLoans.toFixed(0)}</span></div>
+                <div className="metric-row"><span className="metric-name">Short term loans</span><span className="metric-value">{formatNum(stl)}</span></div>
+                <div className="metric-row"><span className="metric-name">Long term loans</span><span className="metric-value">{formatNum(ltl)}</span></div>
+                <div className="metric-row"><span className="metric-name">Current total</span><span className="metric-value font-bold">{formatNum(totalLoans)}</span></div>
             </div>
           </div>
         </div>
@@ -198,10 +203,10 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="ratio-card">
-              <div className="ratio-big" style={{ '--pct': `${Math.min((liquidCost / totalLoans) * 100, 100)}%` }}><span>{(liquidCost / totalLoans).toFixed(2)}x</span></div>
+              <div className="ratio-big" style={{ '--pct': `${Math.min((liquidCost / totalLoans) * 100, 100)}%` }}><span>{formatNum(liquidCost / totalLoans)}x</span></div>
               <div>
-                  <div className="metric-row"><span className="metric-name">Liquid assets</span><span className="metric-value">{liquidCost.toFixed(1)}</span></div>
-                  <div className="metric-row"><span className="metric-name">Debt</span><span className="metric-value">{totalLoans.toFixed(1)}</span></div>
+                  <div className="metric-row"><span className="metric-name">Liquid assets</span><span className="metric-value">{formatNum(liquidCost)}</span></div>
+                  <div className="metric-row"><span className="metric-name">Debt</span><span className="metric-value">{formatNum(totalLoans)}</span></div>
               </div>
           </div>
         </div>
@@ -213,10 +218,10 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="ratio-card">
-              <div className="ratio-big" style={{ '--pct': `${Math.min((liquidMarket / totalLoans) * 100, 100)}%` }}><span>{(liquidMarket / totalLoans).toFixed(2)}x</span></div>
+              <div className="ratio-big" style={{ '--pct': `${Math.min((liquidMarket / totalLoans) * 100, 100)}%` }}><span>{formatNum(liquidMarket / totalLoans)}x</span></div>
               <div>
-                  <div className="metric-row"><span className="metric-name">Liquid assets</span><span className="metric-value">{liquidMarket.toFixed(1)}</span></div>
-                  <div className="metric-row"><span className="metric-name">Debt</span><span className="metric-value">{totalLoans.toFixed(1)}</span></div>
+                  <div className="metric-row"><span className="metric-name">Liquid assets</span><span className="metric-value">{formatNum(liquidMarket)}</span></div>
+                  <div className="metric-row"><span className="metric-name">Debt</span><span className="metric-value">{formatNum(totalLoans)}</span></div>
               </div>
           </div>
         </div>

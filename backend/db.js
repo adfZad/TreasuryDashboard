@@ -1,16 +1,26 @@
-const sql = require('mssql');
+require('dotenv').config({ path: '../.env' });
 
 // In production, Azure injects connection strings as CUSTOMCONNSTR_<Name> or SQLAZURECONNSTR_<Name>
 // We read from the environment variable instead of hardcoding credentials for security.
 const connectionString = process.env.SQLAZURECONNSTR_TreasuryDB || process.env.CUSTOMCONNSTR_TreasuryDB || process.env.DB_CONNECTION_STRING;
 
+let sql = require('mssql');
+let config = connectionString;
+
+if (connectionString && (connectionString.includes('Trusted_Connection=yes') || connectionString.includes('Trusted_Connection=True'))) {
+    sql = require('mssql/msnodesqlv8');
+    config = {
+        connectionString: connectionString
+    };
+}
+
 let poolPromise;
 
-if (connectionString) {
-  poolPromise = new sql.ConnectionPool(connectionString)
+if (config) {
+  poolPromise = new sql.ConnectionPool(config)
     .connect()
     .then(pool => {
-      console.log('Connected to Azure SQL Database');
+      console.log('Connected to SQL Database');
       return pool;
     })
     .catch(err => {

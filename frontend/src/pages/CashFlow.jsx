@@ -11,7 +11,7 @@ const CashFlow = () => {
       .then(res => {
         // Group by Date for Chart
         const grouped = (res.data.forecasts || []).reduce((acc, curr) => {
-            const date = new Date(curr.BucketStartDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+            const date = new Date(curr.BucketStartDate).toLocaleDateString(undefined, { month: 'short' });
             if (!acc[date]) acc[date] = { name: date, Inflows: 0, Outflows: 0 };
             if (curr.DirectionCode === 'IN') acc[date].Inflows += curr.Amount;
             if (curr.DirectionCode === 'OUT') acc[date].Outflows += Math.abs(curr.Amount);

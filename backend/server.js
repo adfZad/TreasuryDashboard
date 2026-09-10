@@ -11,6 +11,16 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Import Auth Routes
+const { router: authRouter } = require('./auth');
+const uploadRouter = require('./routes/upload');
+const workflowRouter = require('./routes/workflow');
+
+// Mount Routes
+app.use('/api/auth', authRouter);
+app.use('/api/upload', uploadRouter);
+app.use('/api/workflow', workflowRouter);
+
 // Routes
 app.get('/api/dashboard', async (req, res) => {
     try {
