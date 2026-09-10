@@ -1,1 +1,1 @@
-{"name":"treasury-dashboard","version":"1.0.0","scripts":{"start":"node backend/server.js","postinstall":"cd backend && npm install"}}
+{"name":"treasury-dashboard","version":"1.0.0","scripts":{"start":"node backend/server.js","postinstall":"cd backend && npm install && cd ../frontend && npm install","build":"cd frontend && npm run build"}}
