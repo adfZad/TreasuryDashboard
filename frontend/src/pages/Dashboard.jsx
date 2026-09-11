@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 const Dashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -25,12 +26,14 @@ const Dashboard = () => {
         });
     }).catch(err => {
         console.error(err);
+        setError(true);
     }).finally(() => {
         setLoading(false);
     });
   }, []);
 
-  if (loading || !data) return <div className="empty animate-pulse-dot">Loading Dashboard...</div>;
+  if (loading) return <div className="empty animate-pulse-dot">Loading Dashboard...</div>;
+  if (error || !data) return <div className="empty text-danger" style={{ cursor: 'pointer' }} onClick={() => window.location.reload()}>Failed to load data. The database might be busy. Click here to refresh.</div>;
 
   const formatNum = (num, digits = 2) => {
     if (num === null || num === undefined || isNaN(num)) return '0.00';

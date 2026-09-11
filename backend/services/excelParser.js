@@ -7,6 +7,7 @@ function parseMasterReport(workbook) {
         workingCapital: [],
         loansST: [],
         loansLT: [],
+        loanMovement: [],
         errors: []
     };
 
@@ -15,6 +16,7 @@ function parseMasterReport(workbook) {
         parseCashFlow(workbook, parsedData);
         parseWorkingCapital(workbook, parsedData);
         parseLoans(workbook, parsedData);
+        parseLoanMovement(workbook, parsedData);
     } catch (e) {
         parsedData.errors.push(`Critical error parsing workbook: ${e.message}`);
     }
@@ -202,6 +204,116 @@ function parseLoans(workbook, parsedData) {
                     sourceRowNo: i + 1
                 });
             }
+        }
+    }
+}
+
+function parseLoanMovement(workbook, parsedData) {
+    const sheetName = '6. Loan movement';
+    if (!workbook.SheetNames.includes(sheetName)) {
+        parsedData.errors.push(`Missing sheet: ${sheetName}`);
+        return;
+    }
+
+    const sheet = workbook.Sheets[sheetName];
+    const rows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: null });
+
+    let isLongTerm = false;
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length < 8) continue;
+
+        const bankName = String(row[0] || '').trim();
+
+        if (bankName === 'Long Term Loans') {
+            isLongTerm = true;
+            continue;
+        }
+
+        // Break early when reaching bottom tables
+        if (bankName.includes('Net Loans') || bankName.includes('Total Loans as on')) {
+            break;
+        }
+
+        // Skip headers and empty rows
+        if (!bankName || bankName === 'Short Term Loans' || bankName === 'Long Term Loans' || bankName.includes('Total') || bankName === 'Bank' || bankName === 'Projected loan movement schedule' || bankName === 'Loan outstanding as on 01-Aug-26') {
+            continue;
+        }
+        
+        // Due to empty col B, the indices are shifted by 1
+        const openingOS = parseFloat(row[1]) || 0;
+        
+        // August
+        const augPayment = parseFloat(row[2]) || 0;
+        const augNewLoan = parseFloat(row[3]) || 0;
+        const augBalance = parseFloat(row[4]) || 0;
+        
+        // September
+        const sepPayment = parseFloat(row[5]) || 0;
+        const sepNewLoan = parseFloat(row[6]) || 0;
+        const sepBalance = parseFloat(row[7]) || 0;
+
+        // October
+        const octPayment = parseFloat(row[8]) || 0;
+        const octNewLoan = parseFloat(row[9]) || 0;
+        const octBalance = parseFloat(row[10]) || 0;
+
+        // November
+        const novPayment = parseFloat(row[11]) || 0;
+        const novNewLoan = parseFloat(row[12]) || 0;
+        const novBalance = parseFloat(row[13]) || 0;
+
+        if (augPayment !== 0 || augNewLoan !== 0 || augBalance !== 0 || openingOS !== 0) {
+            parsedData.loanMovement.push({
+                bankName: bankName,
+                loanType: isLongTerm ? 'LT' : 'ST',
+                bucketStartDate: '2026-08-01',
+                openingOutstanding: openingOS,
+                paymentAmount: augPayment,
+                newDrawdownAmount: augNewLoan,
+                closingOutstanding: augBalance,
+                sourceRowNo: i + 1
+            });
+        }
+        
+        if (sepPayment !== 0 || sepNewLoan !== 0 || sepBalance !== 0 || augBalance !== 0) {
+            parsedData.loanMovement.push({
+                bankName: bankName,
+                loanType: isLongTerm ? 'LT' : 'ST',
+                bucketStartDate: '2026-09-01',
+                openingOutstanding: augBalance,
+                paymentAmount: sepPayment,
+                newDrawdownAmount: sepNewLoan,
+                closingOutstanding: sepBalance,
+                sourceRowNo: i + 1
+            });
+        }
+
+        if (octPayment !== 0 || octNewLoan !== 0 || octBalance !== 0 || sepBalance !== 0) {
+            parsedData.loanMovement.push({
+                bankName: bankName,
+                loanType: isLongTerm ? 'LT' : 'ST',
+                bucketStartDate: '2026-10-01',
+                openingOutstanding: sepBalance,
+                paymentAmount: octPayment,
+                newDrawdownAmount: octNewLoan,
+                closingOutstanding: octBalance,
+                sourceRowNo: i + 1
+            });
+        }
+
+        if (novPayment !== 0 || novNewLoan !== 0 || novBalance !== 0 || octBalance !== 0) {
+            parsedData.loanMovement.push({
+                bankName: bankName,
+                loanType: isLongTerm ? 'LT' : 'ST',
+                bucketStartDate: '2026-11-01',
+                openingOutstanding: octBalance,
+                paymentAmount: novPayment,
+                newDrawdownAmount: novNewLoan,
+                closingOutstanding: novBalance,
+                sourceRowNo: i + 1
+            });
         }
     }
 }

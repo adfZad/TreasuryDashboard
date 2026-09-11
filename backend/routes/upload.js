@@ -44,7 +44,7 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
         
         // Parse the entire workbook
         const parsedData = parseMasterReport(workbook);
-        console.log("Master report extracted", Object.keys(parsedData).map(k => `${k}: ${parsedData[k].length || 0}`));
+        console.log("Master report extracted", Object.keys(parsedData).map(k => `${k}: ${parsedData[k]?.length || 0}`));
         if (parsedData.errors && parsedData.errors.length > 0) {
              console.log("Parsing errors:", parsedData.errors);
              return res.status(400).json({ message: 'Errors in workbook parsing', errors: parsedData.errors });
@@ -65,7 +65,8 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
                                    (parsedData.cashflow.length * 2) + 
                                    parsedData.workingCapital.length + 
                                    parsedData.loansST.length + 
-                                   parsedData.loansLT.length;
+                                   parsedData.loansLT.length +
+                                   parsedData.loanMovement.length;
             console.log("Total rows to insert:", totalRowsCount);
 
             if (totalRowsCount === 0) {
@@ -139,6 +140,7 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
             await insertDetails(parsedData.workingCapital, 'WORKING_CAPITAL');
             await insertDetails(parsedData.loansST, 'LOAN_ST');
             await insertDetails(parsedData.loansLT, 'LOAN_LT');
+            await insertDetails(parsedData.loanMovement, 'LOAN_MOVEMENT');
             
             console.log("Committing transaction...");
             await transaction.commit();

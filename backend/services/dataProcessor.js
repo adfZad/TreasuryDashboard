@@ -192,6 +192,53 @@ async function processBatchData(batchId) {
                         VALUES (1, @ref, @lender, @type, 1, @amount, @amount, 'ACTIVE')
                     `);
             }
+            else if (row.TargetRecordType === 'LOAN_MOVEMENT') {
+                // Clean bank name to match between sheets (e.g. "Dukhan Bank (Loan + CL)" -> "Dukhan Bank")
+                const cleanBankName = data.bankName.split('#')[0].split('(')[0].trim().toLowerCase();
+                const firstWord = cleanBankName.split(' ')[0];
+                const searchStr = (firstWord === 'al') ? 'al ray' : firstWord;
+                
+                const loanRes = await req()
+                    .input('lender', sql.NVarChar, searchStr + '%')
+                    .input('type', sql.VarChar, data.loanType || 'ST')
+                    .query(`SELECT LoanId FROM treasury.Loan WHERE LOWER(LenderName) LIKE @lender AND LoanTypeCode = @type ORDER BY LoanId ASC`);
+                
+                // Track used loans in this transaction to prevent unique key violations for multiple loans from same bank
+                if (!transaction._usedLoans) transaction._usedLoans = {};
+                
+                let assignedLoanId = null;
+                for (const lRow of loanRes.recordset) {
+                    const key = `${lRow.LoanId}_${data.bucketStartDate}`;
+                    if (!transaction._usedLoans[key]) {
+                        assignedLoanId = lRow.LoanId;
+                        transaction._usedLoans[key] = true;
+                        break;
+                    }
+                }
+                
+                if (assignedLoanId) {
+                    const endOfMonth = new Date(data.bucketStartDate);
+                    endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+                    endOfMonth.setDate(endOfMonth.getDate() - 1);
+                    const endDateStr = endOfMonth.toISOString().split('T')[0];
+                    
+                    await req()
+                        .input('lId', sql.BigInt, assignedLoanId)
+                        .input('perId', sql.Int, perId)
+                        .input('verId', sql.BigInt, verId)
+                        .input('startDate', sql.Date, data.bucketStartDate)
+                        .input('endDate', sql.Date, endDateStr)
+                        .input('openOS', sql.Decimal(18,2), data.openingOutstanding)
+                        .input('payAmt', sql.Decimal(18,2), data.paymentAmount)
+                        .input('newAmt', sql.Decimal(18,2), data.newDrawdownAmount)
+                        .input('closeOS', sql.Decimal(18,2), data.closingOutstanding)
+                        .query(`
+                            INSERT INTO treasury.LoanMovementForecast 
+                            (LoanId, ReportingPeriodId, ReportVersionId, BucketStartDate, BucketEndDate, OpeningOutstanding, PaymentAmount, NewDrawdownAmount, ClosingOutstanding)
+                            VALUES (@lId, @perId, @verId, @startDate, @endDate, @openOS, @payAmt, @newAmt, @closeOS)
+                        `);
+                }
+            }
         }
 
         // D. Mark Batch as Approved
