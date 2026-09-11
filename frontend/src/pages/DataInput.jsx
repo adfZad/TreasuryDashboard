@@ -81,8 +81,13 @@ const DataInput = () => {
           <form onSubmit={handleSubmit} className="input-panel">
             <div>
               <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Target Module</label>
-              <select style={{ width: '100%', backgroundColor: '#f8fafc' }} value={module} onChange={(e) => setModule(e.target.value)} disabled>
+              <select style={{ width: '100%', backgroundColor: '#f8fafc', fontSize: '14px', padding: '8px' }} value={module} onChange={(e) => setModule(e.target.value)}>
                 <option value="MASTER_REPORT">Master Treasury Report</option>
+                <option value="FUNDS_POSITION">Funds Position</option>
+                <option value="CASH_FLOW">Cash Flow</option>
+                <option value="WORKING_CAPITAL">Working Capital</option>
+                <option value="LOANS">Loans</option>
+                <option value="LOAN_MOVEMENT">Loan Movement</option>
               </select>
             </div>
             

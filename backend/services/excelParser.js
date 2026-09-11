@@ -25,10 +25,14 @@ function parseMasterReport(workbook) {
 }
 
 function parseFundsPosition(workbook, parsedData) {
-    const sheetName = '1. Funds position';
+    let sheetName = '1. Funds position';
     if (!workbook.SheetNames.includes(sheetName)) {
-        parsedData.errors.push(`Missing sheet: ${sheetName}`);
-        return;
+        if (workbook.SheetNames.length === 1) {
+            sheetName = workbook.SheetNames[0];
+        } else {
+            parsedData.errors.push(`Missing sheet: ${sheetName}`);
+            return;
+        }
     }
     
     const sheet = workbook.Sheets[sheetName];
@@ -59,10 +63,14 @@ function parseFundsPosition(workbook, parsedData) {
 }
 
 function parseCashFlow(workbook, parsedData) {
-    const sheetName = '2. Cash flow';
+    let sheetName = '2. Cash flow';
     if (!workbook.SheetNames.includes(sheetName)) {
-        parsedData.errors.push(`Missing sheet: ${sheetName}`);
-        return;
+        if (workbook.SheetNames.length === 1) {
+            sheetName = workbook.SheetNames[0];
+        } else {
+            parsedData.errors.push(`Missing sheet: ${sheetName}`);
+            return;
+        }
     }
 
     const sheet = workbook.Sheets[sheetName];
@@ -113,10 +121,14 @@ function parseCashFlow(workbook, parsedData) {
 }
 
 function parseWorkingCapital(workbook, parsedData) {
-    const sheetName = '3. Working capital';
+    let sheetName = '3. Working capital';
     if (!workbook.SheetNames.includes(sheetName)) {
-        parsedData.errors.push(`Missing sheet: ${sheetName}`);
-        return;
+        if (workbook.SheetNames.length === 1) {
+            sheetName = workbook.SheetNames[0];
+        } else {
+            parsedData.errors.push(`Missing sheet: ${sheetName}`);
+            return;
+        }
     }
 
     const sheet = workbook.Sheets[sheetName];
@@ -154,10 +166,14 @@ function parseWorkingCapital(workbook, parsedData) {
 }
 
 function parseLoans(workbook, parsedData) {
-    const sheetName = '4. Loan';
+    let sheetName = '4. Loan';
     if (!workbook.SheetNames.includes(sheetName)) {
-        parsedData.errors.push(`Missing sheet: ${sheetName}`);
-        return;
+        if (workbook.SheetNames.length === 1) {
+            sheetName = workbook.SheetNames[0];
+        } else {
+            parsedData.errors.push(`Missing sheet: ${sheetName}`);
+            return;
+        }
     }
 
     const sheet = workbook.Sheets[sheetName];
@@ -209,10 +225,14 @@ function parseLoans(workbook, parsedData) {
 }
 
 function parseLoanMovement(workbook, parsedData) {
-    const sheetName = '6. Loan movement';
+    let sheetName = '6. Loan movement';
     if (!workbook.SheetNames.includes(sheetName)) {
-        parsedData.errors.push(`Missing sheet: ${sheetName}`);
-        return;
+        if (workbook.SheetNames.length === 1) {
+            sheetName = workbook.SheetNames[0];
+        } else {
+            parsedData.errors.push(`Missing sheet: ${sheetName}`);
+            return;
+        }
     }
 
     const sheet = workbook.Sheets[sheetName];
@@ -318,6 +338,57 @@ function parseLoanMovement(workbook, parsedData) {
     }
 }
 
+function parseSpecificModule(workbook, moduleCode) {
+    const parsedData = {
+        funds: [],
+        cashflow: [],
+        workingCapital: [],
+        loansST: [],
+        loansLT: [],
+        loanMovement: [],
+        errors: []
+    };
+
+    try {
+        switch(moduleCode) {
+            case 'MASTER_REPORT':
+                parseFundsPosition(workbook, parsedData);
+                parseCashFlow(workbook, parsedData);
+                parseWorkingCapital(workbook, parsedData);
+                parseLoans(workbook, parsedData);
+                parseLoanMovement(workbook, parsedData);
+                break;
+            case 'FUNDS_POSITION':
+                parseFundsPosition(workbook, parsedData);
+                break;
+            case 'CASH_FLOW':
+                parseCashFlow(workbook, parsedData);
+                break;
+            case 'WORKING_CAPITAL':
+                parseWorkingCapital(workbook, parsedData);
+                break;
+            case 'LOANS':
+                parseLoans(workbook, parsedData);
+                break;
+            case 'LOAN_MOVEMENT':
+                parseLoanMovement(workbook, parsedData);
+                break;
+            default:
+                // If the module code isn't provided or is invalid, assume master report
+                parseFundsPosition(workbook, parsedData);
+                parseCashFlow(workbook, parsedData);
+                parseWorkingCapital(workbook, parsedData);
+                parseLoans(workbook, parsedData);
+                parseLoanMovement(workbook, parsedData);
+        }
+    } catch (e) {
+        parsedData.errors.push(`Critical error parsing workbook: ${e.message}`);
+    }
+
+    return parsedData;
+}
+
 module.exports = {
-    parseMasterReport
+    parseMasterReport,
+    parseSpecificModule
 };

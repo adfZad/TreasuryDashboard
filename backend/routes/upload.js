@@ -38,13 +38,13 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
     try {
         const { module } = req.body; // e.g. "BANK_BALANCE", "CASH_FLOW"
         
-        const { parseMasterReport } = require('../services/excelParser');
+        const { parseSpecificModule } = require('../services/excelParser');
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         console.log("Workbook parsed");
         
-        // Parse the entire workbook
-        const parsedData = parseMasterReport(workbook);
-        console.log("Master report extracted", Object.keys(parsedData).map(k => `${k}: ${parsedData[k]?.length || 0}`));
+        // Parse the specific module (or all if MASTER_REPORT)
+        const parsedData = parseSpecificModule(workbook, module);
+        console.log("Module extracted", Object.keys(parsedData).map(k => `${k}: ${parsedData[k]?.length || 0}`));
         if (parsedData.errors && parsedData.errors.length > 0) {
              console.log("Parsing errors:", parsedData.errors);
              return res.status(400).json({ message: 'Errors in workbook parsing', errors: parsedData.errors });
@@ -80,7 +80,7 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
             const batchRes = await batchReq
                 .input('perId', sql.Int, perId)
                 .input('verId', sql.BigInt, verId)
-                .input('module', sql.VarChar, 'MASTER_REPORT')
+                .input('module', sql.VarChar, module || 'MASTER_REPORT')
                 .input('origFileName', sql.NVarChar, req.file.originalname)
                 .input('fileHash', sql.VarChar, 'MASTERHASH123') 
                 .input('fileSize', sql.BigInt, req.file.size)
