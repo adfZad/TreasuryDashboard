@@ -28,6 +28,19 @@ app.get('/api/dashboard', async (req, res) => {
         const resultBank = await pool.request().query('SELECT SUM(ReportingCurrencyAmount) as TotalBankBalance FROM banking.BankBalance');
         const resultLoans = await pool.request().query('SELECT SUM(CurrentOutstanding) as TotalLoans FROM treasury.Loan');
         const resultWC = await pool.request().query('SELECT SUM(UtilizedAmount) as Utilized, SUM(SanctionedLimit) as Sanctioned FROM treasury.WorkingCapitalFacility wcf JOIN treasury.FacilityUtilization fu ON wcf.FacilityId = fu.FacilityId');
+        const resultFundsSum = await pool.request().query('SELECT ISNULL(SUM(ClosingBalance),0) as Total FROM banking.BankBalance');
+        const totalBankBalance = (resultFundsSum.recordset[0].Total || 0) / 1000000;
+
+        // Fetch dynamic reserves
+        const resultReserves = await pool.request().query('SELECT TOP 1 LiquidityReserve, WorkingCapitalReserve FROM banking.FundsSummary');
+        let wcReserves = 2;
+        let liquidityReserves = 5;
+        if (resultReserves.recordset.length > 0) {
+            wcReserves = resultReserves.recordset[0].WorkingCapitalReserve || 0;
+            liquidityReserves = resultReserves.recordset[0].LiquidityReserve || 0;
+        }
+
+        const availableFunds = totalBankBalance - wcReserves - liquidityReserves;
         const resultEquity = await pool.request().query('SELECT SUM(ClosingBookValue) as TotalEquity FROM treasury.EquityValuation');
 
         res.json({ 
@@ -35,7 +48,8 @@ app.get('/api/dashboard', async (req, res) => {
             totalLoans: resultLoans.recordset[0].TotalLoans || 0,
             wcUtilized: resultWC.recordset[0].Utilized || 0,
             wcSanctioned: resultWC.recordset[0].Sanctioned || 0,
-            totalEquity: resultEquity.recordset[0].TotalEquity || 0
+            totalEquity: resultEquity.recordset[0].TotalEquity || 0,
+            availableFunds: availableFunds
         });
     } catch (err) {
         res.status(500).send(err.message);
@@ -57,7 +71,17 @@ app.get('/api/funds', async (req, res) => {
             JOIN ref.Bank bk ON b.BankId = bk.BankId
             JOIN ref.Currency c ON bal.CurrencyId = c.CurrencyId
         `);
-        res.json({ balances: result.recordset });
+        
+        const summaryResult = await pool.request().query('SELECT TOP 1 LiquidityReserve, WorkingCapitalReserve FROM banking.FundsSummary');
+        let summary = { liquidityReserve: 5, workingCapitalReserve: 2 };
+        if (summaryResult.recordset.length > 0) {
+            summary = {
+                liquidityReserve: summaryResult.recordset[0].LiquidityReserve,
+                workingCapitalReserve: summaryResult.recordset[0].WorkingCapitalReserve
+            };
+        }
+
+        res.json({ balances: result.recordset, summary });
     } catch (err) {
         res.status(500).send(err.message);
     }
@@ -78,6 +102,31 @@ app.get('/api/cashflow', async (req, res) => {
             ORDER BY cf.BucketStartDate, c.SequenceNo
         `);
         res.json({ forecasts: result.recordset });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.get('/api/cashflow/comments', async (req, res) => {
+    try {
+        const pool = await poolPromise;
+        const result = await pool.request().query(`
+            SELECT TOP 1 CommentText FROM CashFlowComments ORDER BY UpdatedAt DESC
+        `);
+        res.json({ comment: result.recordset[0] ? result.recordset[0].CommentText : '' });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.post('/api/cashflow/comments', async (req, res) => {
+    try {
+        const { comment } = req.body;
+        const pool = await poolPromise;
+        await pool.request()
+            .input('comment', sql.NVarChar(sql.MAX), comment)
+            .query(`INSERT INTO CashFlowComments (CommentText, UpdatedAt) VALUES (@comment, GETDATE())`);
+        res.json({ message: 'Comment saved successfully' });
     } catch (err) {
         res.status(500).send(err.message);
     }

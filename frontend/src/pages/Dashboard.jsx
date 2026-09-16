@@ -245,7 +245,7 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <div className="note-box alert-box" style={{ marginTop: '16px' }}><strong>Source quality note:</strong> the Debt & Equity sheet contains several <strong>#REF!</strong> formulas. This prototype recalculates the current Debt / Equity and liquid asset ratios from the valid current balances in the workbook instead of displaying the broken references.</div>
+
     </div>
   );
 };

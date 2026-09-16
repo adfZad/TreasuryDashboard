@@ -142,6 +142,18 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
             await insertDetails(parsedData.loansLT, 'LOAN_LT');
             await insertDetails(parsedData.loanMovement, 'LOAN_MOVEMENT');
             
+            // Upsert Funds Summary (liquidity and working capital reserves)
+            if (parsedData.fundsSummary) {
+                await new sql.Request(transaction)
+                    .input('liq', sql.Decimal(18,2), parsedData.fundsSummary.liquidityReserve)
+                    .input('wc', sql.Decimal(18,2), parsedData.fundsSummary.workingCapitalReserve)
+                    .query(`
+                        IF EXISTS (SELECT 1 FROM banking.FundsSummary)
+                            UPDATE banking.FundsSummary SET LiquidityReserve = @liq, WorkingCapitalReserve = @wc, UpdatedAt = GETDATE()
+                        ELSE
+                            INSERT INTO banking.FundsSummary (LiquidityReserve, WorkingCapitalReserve) VALUES (@liq, @wc)
+                    `);
+            }
             console.log("Committing transaction...");
             await transaction.commit();
             console.log("Transaction committed!");

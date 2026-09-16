@@ -23,10 +23,6 @@ const WorkingCapital = () => {
 
   return (
     <div>
-      <div className="section-heading">
-        <h2>Working Capital Finance</h2>
-        <p>Short-term facilities and utilisation overview</p>
-      </div>
 
       <div className="kpi-grid">
         <div className="kpi-card card-hover">

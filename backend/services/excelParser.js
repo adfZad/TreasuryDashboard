@@ -38,23 +38,59 @@ function parseFundsPosition(workbook, parsedData) {
     const sheet = workbook.Sheets[sheetName];
     const rows = xlsx.utils.sheet_to_json(sheet, { header: 1, defval: null });
     
-    // Structure: Bank, Company, AccountNo, Type, Branch, Currency, Amount
+    // Extract Summary Values from the same sheet (around row 115)
+    let liquidityReserve = 5;
+    let workingCapitalReserve = 2;
+
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
-        // Ensure row has enough columns
-        if (!row || row.length < 7) continue;
+        if (!row) continue;
+        
+        // Search for summary rows in columns 1 and 2 (B and C in excel)
+        const labelCol = String(row[1] || '').trim();
+        if (labelCol.includes('Liquidity reserve (FD)') && row[2] !== undefined) {
+            liquidityReserve = Math.abs(parseFloat(row[2]) || 0);
+        }
+        if (labelCol.includes('Reserved working capital') && row[2] !== undefined) {
+            workingCapitalReserve = Math.abs(parseFloat(row[2]) || 0);
+        }
+    }
+
+    parsedData.fundsSummary = {
+        liquidityReserve,
+        workingCapitalReserve
+    };
+
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || row.length < 5) continue;
 
         const bank = String(row[0] || '').trim();
-        const accountNo = String(row[3] || '').trim();
-        const amount = parseFloat(row[6]);
+        let companyName = String(row[1] || '').trim();
+        let accountNo = '';
+        let currency = '';
+        let amount = 0;
 
-        // A valid account row usually has a 10-15 digit account number and a numeric amount
-        if (bank && accountNo && accountNo.length >= 8 && !isNaN(amount)) {
+        // Determine format based on where the Currency string is located
+        if (String(row[5] || '').trim() === 'QAR') {
+            // QAR format: Bank, Company, AccountNo, Type, Branch, Currency, Amount
+            accountNo = String(row[2] || '').trim();
+            currency = 'QAR';
+            amount = parseFloat(row[6]);
+        } else if (['USD', 'EUR', 'CHF', 'GBP'].includes(String(row[3] || '').trim())) {
+            // Foreign Currency format: Bank, Company, AccountNo, Currency, ForeignAmount, ExchRate, QARAmount
+            accountNo = String(row[2] || '').trim();
+            currency = String(row[3]).trim();
+            // We want to store the actual foreign currency amount for the USD/EUR charts
+            amount = parseFloat(row[4]); 
+        }
+
+        if (bank && accountNo && !isNaN(amount) && amount > 0) {
             parsedData.funds.push({
                 bankName: bank,
-                companyName: String(row[1] || '').trim(),
+                companyName: companyName,
                 accountNo: accountNo,
-                currency: String(row[5] || '').trim(),
+                currency: currency,
                 closingBalance: amount,
                 sourceRowNo: i + 1
             });

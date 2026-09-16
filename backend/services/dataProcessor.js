@@ -68,9 +68,32 @@ async function processBatchData(batchId) {
             return insertRes.recordset[0].BankId;
         }
 
+        // Helper to get or create Currency
+        const currMap = {};
+        async function getOrCreateCurrency(currencyCode) {
+            if (!currencyCode) currencyCode = 'QAR';
+            currencyCode = currencyCode.toUpperCase();
+            if (currMap[currencyCode]) return currMap[currencyCode];
+
+            const cRes = await req().input('cCode', sql.VarChar, currencyCode).query('SELECT CurrencyId FROM ref.Currency WHERE CurrencyCode = @cCode');
+            if (cRes.recordset.length > 0) {
+                currMap[currencyCode] = cRes.recordset[0].CurrencyId;
+                return currMap[currencyCode];
+            }
+
+            // Insert new Currency
+            const insertRes = await req()
+                .input('cCode', sql.VarChar, currencyCode)
+                .input('cName', sql.NVarChar, currencyCode) // Just use the code as name
+                .query('INSERT INTO ref.Currency (CurrencyCode, CurrencyName, DecimalPlaces, IsBaseCurrency, IsActive) OUTPUT INSERTED.CurrencyId VALUES (@cCode, @cName, 2, 0, 1)');
+            
+            currMap[currencyCode] = insertRes.recordset[0].CurrencyId;
+            return currMap[currencyCode];
+        }
+
         // Helper to get or create a Bank Account
         const accMap = {};
-        async function getOrCreateAccount(bankName, companyName, accountNo) {
+        async function getOrCreateAccount(bankName, companyName, accountNo, currId) {
             const cacheKey = `${bankName}_${companyName}_${accountNo}`;
             if (accMap[cacheKey]) return accMap[cacheKey];
 
@@ -91,7 +114,7 @@ async function processBatchData(batchId) {
                 .input('bId', sql.Int, bankId)
                 .input('name', sql.NVarChar, companyName || 'Auto Provisioned')
                 .input('aNo', sql.VarChar, accountNo)
-                .input('currId', sql.SmallInt, 1) // QAR
+                .input('currId', sql.SmallInt, currId)
                 .query('INSERT INTO banking.BankAccount (BusinessUnitId, BankId, AccountName, AccountNumber, CurrencyId) OUTPUT INSERTED.BankAccountId VALUES (@buId, @bId, @name, @aNo, @currId)');
             
             accMap[cacheKey] = insertRes.recordset[0].BankAccountId;
@@ -120,7 +143,8 @@ async function processBatchData(batchId) {
             const data = JSON.parse(row.RawPayloadJson);
             
             if (row.TargetRecordType === 'FUNDS_POSITION') {
-                const accId = await getOrCreateAccount(data.bankName, data.companyName, data.accountNo);
+                const currId = await getOrCreateCurrency(data.currency);
+                const accId = await getOrCreateAccount(data.bankName, data.companyName, data.accountNo, currId);
                 if (accId) {
                     try {
                         await req()
@@ -128,9 +152,10 @@ async function processBatchData(batchId) {
                             .input('perId', sql.Int, perId)
                             .input('verId', sql.BigInt, verId)
                             .input('amount', sql.Decimal(18,2), data.closingBalance)
+                            .input('currId', sql.SmallInt, currId)
                             .query(`
                                 INSERT INTO banking.BankBalance (BankAccountId, ReportingPeriodId, ReportVersionId, BalanceDate, ClosingBalance, CurrencyId, ReportingCurrencyAmount, SourceType)
-                                VALUES (@accId, @perId, @verId, CAST(GETUTCDATE() AS DATE), @amount, 1, @amount, 'Upload')
+                                VALUES (@accId, @perId, @verId, CAST(GETUTCDATE() AS DATE), @amount, @currId, @amount, 'Upload')
                             `);
                     } catch (err) {
                         if (err.message.includes('duplicate key') || err.message.includes('UX_BankBalance')) {
@@ -139,11 +164,11 @@ async function processBatchData(batchId) {
                                 .input('perId', sql.Int, perId)
                                 .input('verId', sql.BigInt, verId)
                                 .input('amount', sql.Decimal(18,2), data.closingBalance)
+                                .input('currId', sql.SmallInt, currId)
                                 .query(`
                                     UPDATE banking.BankBalance 
-                                    SET ClosingBalance = ClosingBalance + @amount,
-                                        ReportingCurrencyAmount = ReportingCurrencyAmount + @amount
-                                    WHERE BankAccountId = @accId AND ReportVersionId = @verId AND BalanceDate = CAST(GETUTCDATE() AS DATE)
+                                    SET ClosingBalance = @amount, CurrencyId = @currId, ReportingCurrencyAmount = @amount, ModifiedAtUtc = GETUTCDATE()
+                                    WHERE BankAccountId = @accId AND ReportingPeriodId = @perId AND ReportVersionId = @verId
                                 `);
                         } else {
                             throw err;

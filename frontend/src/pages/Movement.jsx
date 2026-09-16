@@ -55,10 +55,6 @@ const Movement = () => {
 
   return (
     <div>
-      <div className="section-heading">
-        <h2>Projected Loan Movement</h2>
-        <p>Loan balance after scheduled repayments, new loans and liquidity reserve</p>
-      </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
         

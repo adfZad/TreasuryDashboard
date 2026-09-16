@@ -7,6 +7,7 @@ const DataInput = () => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [batches, setBatches] = useState([]);
+  const [comment, setComment] = useState('');
 
   useEffect(() => {
     fetchBatches();
@@ -37,17 +38,22 @@ const DataInput = () => {
 
     try {
       const res = await axios.post('/api/upload/excel', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
       
-      setStatus({ 
-        type: 'success', 
-        msg: `Success! Batch ID: ${res.data.batchId}. ${res.data.rowsProcessed} rows processed. ${res.data.errors} errors.` 
-      });
+      // If there is a comment, save it too
+      if (comment) {
+        await axios.post('/api/cashflow/comments', { comment });
+      }
+
+      setStatus({ type: 'success', msg: res.data.message });
       setFile(null);
       // Reset file input
       document.getElementById('fileUpload').value = '';
       fetchBatches(); // Refresh history
+      setComment(''); // Clear comment after successful upload
     } catch (err) {
       const errorData = err.response?.data;
       if (errorData?.errors?.length > 0) {
@@ -68,10 +74,6 @@ const DataInput = () => {
 
   return (
     <div>
-      <div className="section-heading">
-        <h2>Data Ingestion</h2>
-        <p>Upload Excel schedules or manually input data to stage into TreasuryDB</p>
-      </div>
 
       <div className="grid-2">
         <div className="card">
@@ -112,6 +114,16 @@ const DataInput = () => {
                   Supported formats: .xlsx, .xls
                 </span>
               </label>
+            </div>
+            
+            <div style={{ marginTop: '15px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '6px' }}>Cash Flow Comments (Optional)</label>
+              <textarea 
+                style={{ width: '100%', height: '80px', backgroundColor: '#f8fafc', fontSize: '12px', padding: '10px', border: '1px solid var(--border)', borderRadius: '6px', resize: 'vertical' }} 
+                placeholder="Type any comments to include in the Cash Flow projection..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              ></textarea>
             </div>
             
             <button type="submit" className="primary-btn" disabled={loading || !file} style={{ marginTop: '15px', width: '100%' }}>

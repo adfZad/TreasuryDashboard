@@ -31,10 +31,6 @@ const Debt = () => {
 
   return (
     <div>
-      <div className="section-heading">
-        <h2>Debt & Liquidity Position</h2>
-        <p>Gearing and liquidity reserves</p>
-      </div>
 
       <div className="kpi-grid">
         <div className="kpi-card">

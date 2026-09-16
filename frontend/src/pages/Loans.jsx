@@ -30,10 +30,6 @@ const Loans = () => {
 
   return (
     <div>
-      <div className="section-heading">
-        <h2>Loan Position</h2>
-        <p>Corporate borrowings and term loans</p>
-      </div>
 
       <div className="kpi-grid">
         <div className="kpi-card card-hover">

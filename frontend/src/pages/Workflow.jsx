@@ -110,10 +110,6 @@ const Workflow = () => {
 
   return (
     <div>
-      <div className="section-heading">
-        <h2>Approval Workflow Inbox</h2>
-        <p>Review and approve pending data submissions before they update live dashboards</p>
-      </div>
 
       <div className="card">
         <div className="card-header">
