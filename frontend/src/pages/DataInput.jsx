@@ -72,6 +72,18 @@ const DataInput = () => {
     }
   };
 
+  const getTemplateLink = () => {
+    switch(module) {
+      case 'FUNDS_POSITION': return '/Sample_Template_Funds.xlsx';
+      case 'CASH_FLOW': return '/Sample_Template_CashFlow.xlsx';
+      case 'WORKING_CAPITAL': return '/Sample_Template_WorkingCapital.xlsx';
+      case 'LOANS':
+      case 'LOAN_MOVEMENT': return '/Sample_Template_Loans.xlsx';
+      case 'MASTER_REPORT':
+      default: return '/Sample_Template_Master.xlsx';
+    }
+  };
+
   return (
     <div>
 
@@ -97,7 +109,7 @@ const DataInput = () => {
               <label className="file-label" style={{ 
                 width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', 
                 border: '2px dashed var(--blue)', background: 'var(--blue-soft)', 
-                padding: '2rem 1rem', borderRadius: '8px', cursor: 'pointer' 
+                padding: '1rem', borderRadius: '8px', cursor: 'pointer' 
               }}>
                 <input 
                   id="fileUpload"
@@ -113,6 +125,11 @@ const DataInput = () => {
                 <span style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
                   Supported formats: .xlsx, .xls
                 </span>
+                {!file && (
+                  <a href={getTemplateLink()} download onClick={(e) => e.stopPropagation()} style={{ fontSize: '13px', color: 'var(--blue)', marginTop: '12px', textDecoration: 'underline', fontWeight: '500' }}>
+                    Download Sample Template
+                  </a>
+                )}
               </label>
             </div>
             

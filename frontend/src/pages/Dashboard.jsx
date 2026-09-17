@@ -1,6 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import Funds from './Funds';
+import CashFlow from './CashFlow';
+import WorkingCapital from './WorkingCapital';
+import Loans from './Loans';
+import Debt from './Debt';
+import Movement from './Movement';
+
+const Accordion = ({ title, children }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="card" style={{ marginBottom: '8px', overflow: 'hidden' }}>
+      <div 
+        className="card-header" 
+        style={{ cursor: 'pointer', padding: '12px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 0, borderBottom: isOpen ? '1px solid var(--line)' : 'none' }}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="card-title" style={{ fontSize: '14px', fontWeight: 600, margin: 0 }}>{title}</div>
+        <div style={{ fontSize: '20px', color: 'var(--blue)', fontWeight: '600', lineHeight: '20px' }}>{isOpen ? '−' : '+'}</div>
+      </div>
+      {isOpen && (
+        <div style={{ padding: '16px 0', backgroundColor: '#f9fbfd' }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
@@ -99,102 +126,25 @@ const Dashboard = () => {
         <div className="kpi-card"><div className="kpi-top"><div className="kpi-label">3 Month Net Cash</div><div className="kpi-icon" style={{color:'var(--text)'}}>↕</div></div><div className={`kpi-value ${netCash >= 0 ? 'good' : 'bad'}`}>{netCash > 0 ? '+' : ''}{formatNum(netCash)}</div><div className="kpi-foot">Aug to Oct excluding Murabaha</div></div>
       </div>
 
-      <div className="grid-2">
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Bank Wise Funds Position</div>
-              <div className="card-subtitle">QAR accounts by bank</div>
-            </div>
-            <span className="badge blue">QAR accounts</span>
-          </div>
-          <div style={{ height: 260, width: '100%' }}>
-            <ResponsiveContainer>
-              <BarChart data={fundsChartData} layout="vertical" margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                <XAxis type="number" />
-                <YAxis dataKey="name" type="category" width={80} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#397bbd" radius={[0, 4, 4, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Cash Flow Projection</div>
-              <div className="card-subtitle">August to October 2026</div>
-            </div>
-            <span className={`badge ${netCash >= 0 ? 'green' : 'red'}`}>Net {netCash > 0 ? '+' : ''}{formatNum(netCash)}</span>
-          </div>
-          <div style={{ height: 260, width: '100%' }}>
-            <ResponsiveContainer>
-              <BarChart data={cashflowChartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Inflows" fill="#6caa52" radius={[3, 3, 0, 0]} barSize={20} />
-                <Bar dataKey="Outflows" fill="#dc6b61" radius={[3, 3, 0, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid-2">
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Working Capital Facility Utilisation</div>
-              <div className="card-subtitle">Bank wise sanctioned vs utilised</div>
-            </div>
-            <span className={`badge ${highUtilCount > 0 ? 'amber' : 'green'}`}>{highUtilCount} banks ≥ 80%</span>
-          </div>
-          <div style={{ height: 260, width: '100%' }}>
-            <ResponsiveContainer>
-              <BarChart data={wcChartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="Sanctioned" fill="#3479bd" radius={[3, 3, 0, 0]} barSize={20} />
-                <Bar dataKey="Utilized" fill="#8d6fba" radius={[3, 3, 0, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <div className="card-title">Debt Mix</div>
-              <div className="card-subtitle">Short term vs long term</div>
-            </div>
-            <span className="badge blue">QAR mn</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', height: 260 }}>
-            <div style={{ flex: 1, height: '100%' }}>
-                <ResponsiveContainer>
-                    <PieChart>
-                        <Pie data={debtMixData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} dataKey="value">
-                            {debtMixData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                        </Pie>
-                        <Tooltip />
-                    </PieChart>
-                </ResponsiveContainer>
-            </div>
-            <div style={{ flex: 1 }}>
-                <div className="metric-row"><span className="metric-name">Short term loans</span><span className="metric-value">{formatNum(stl)}</span></div>
-                <div className="metric-row"><span className="metric-name">Long term loans</span><span className="metric-value">{formatNum(ltl)}</span></div>
-                <div className="metric-row"><span className="metric-name">Current total</span><span className="metric-value font-bold">{formatNum(totalLoans)}</span></div>
-            </div>
-          </div>
-        </div>
+      <div style={{ marginTop: '24px', marginBottom: '24px' }}>
+        <Accordion title="Funds Position">
+          <Funds />
+        </Accordion>
+        <Accordion title="Cash Flow">
+          <CashFlow />
+        </Accordion>
+        <Accordion title="Working Capital">
+          <WorkingCapital />
+        </Accordion>
+        <Accordion title="Loans">
+          <Loans />
+        </Accordion>
+        <Accordion title="Debt & Liquidity">
+          <Debt />
+        </Accordion>
+        <Accordion title="Loan Movement">
+          <Movement />
+        </Accordion>
       </div>
 
       <div className="grid-3" style={{ marginTop: '16px' }}>
