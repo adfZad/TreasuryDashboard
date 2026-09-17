@@ -29,19 +29,13 @@ async function processBatchData(batchId) {
     try {
         const req = () => new sql.Request(transaction);
 
-        // A. Clear existing data for this period/version to avoid duplicates
-        await req().input('perId', sql.Int, perId).input('verId', sql.BigInt, verId)
-            .query('DELETE FROM banking.BankBalance WHERE ReportingPeriodId = @perId AND ReportVersionId = @verId');
-            
-        await req().input('perId', sql.Int, perId).input('verId', sql.BigInt, verId)
-            .query('DELETE FROM treasury.CashFlowForecast WHERE ReportingPeriodId = @perId AND ReportVersionId = @verId');
-
-        // Note: For Working Capital and Loans, standard practice is to UPDATE existing records or handle history. 
-        // For simplicity in this demo, we will TRUNCATE/DELETE or just UPDATE matched rows.
-        await req().query('DELETE FROM treasury.FacilityUtilization');
-        await req().query('DELETE FROM treasury.LoanMovementForecast'); // Must delete children first
-        await req().query('DELETE FROM treasury.Loan');
-
+        // A. Clear existing data for this period/version to avoid d        // Get active period (assuming 1 for demo)
+        const perIdRes = await req().query("SELECT TOP 1 ReportingPeriodId FROM rpt.ReportingPeriod");
+        const verIdRes = await req().query("SELECT TOP 1 ReportVersionId FROM rpt.ReportVersion");
+        const perId = perIdRes.recordset[0]?.ReportingPeriodId || 1;
+        const verId = verIdRes.recordset[0]?.ReportVersionId || 1;
+        
+        // Removed DELETE statements to allow appending/upserting new data
         // B. Pre-load Reference Lookups
         const categories = await req().query('SELECT CashFlowCategoryId, CategoryCode, DirectionCode FROM treasury.CashFlowCategory');
         const catIn = categories.recordset.find(c => c.DirectionCode === 'IN')?.CashFlowCategoryId;
@@ -146,34 +140,25 @@ async function processBatchData(batchId) {
                 const currId = await getOrCreateCurrency(data.currency);
                 const accId = await getOrCreateAccount(data.bankName, data.companyName, data.accountNo, currId);
                 if (accId) {
-                    try {
-                        await req()
-                            .input('accId', sql.BigInt, accId)
-                            .input('perId', sql.Int, perId)
-                            .input('verId', sql.BigInt, verId)
-                            .input('amount', sql.Decimal(18,2), data.closingBalance)
-                            .input('currId', sql.SmallInt, currId)
-                            .query(`
+                    await req()
+                        .input('accId', sql.BigInt, accId)
+                        .input('perId', sql.Int, perId)
+                        .input('verId', sql.BigInt, verId)
+                        .input('amount', sql.Decimal(18,2), data.closingBalance)
+                        .input('currId', sql.SmallInt, currId)
+                        .query(`
+                            IF EXISTS (SELECT 1 FROM banking.BankBalance WHERE BankAccountId = @accId AND ReportingPeriodId = @perId AND ReportVersionId = @verId)
+                            BEGIN
+                                UPDATE banking.BankBalance 
+                                SET ClosingBalance = @amount, CurrencyId = @currId, ReportingCurrencyAmount = @amount, ModifiedAtUtc = GETUTCDATE()
+                                WHERE BankAccountId = @accId AND ReportingPeriodId = @perId AND ReportVersionId = @verId
+                            END
+                            ELSE
+                            BEGIN
                                 INSERT INTO banking.BankBalance (BankAccountId, ReportingPeriodId, ReportVersionId, BalanceDate, ClosingBalance, CurrencyId, ReportingCurrencyAmount, SourceType)
                                 VALUES (@accId, @perId, @verId, CAST(GETUTCDATE() AS DATE), @amount, @currId, @amount, 'Upload')
-                            `);
-                    } catch (err) {
-                        if (err.message.includes('duplicate key') || err.message.includes('UX_BankBalance')) {
-                            await req()
-                                .input('accId', sql.BigInt, accId)
-                                .input('perId', sql.Int, perId)
-                                .input('verId', sql.BigInt, verId)
-                                .input('amount', sql.Decimal(18,2), data.closingBalance)
-                                .input('currId', sql.SmallInt, currId)
-                                .query(`
-                                    UPDATE banking.BankBalance 
-                                    SET ClosingBalance = @amount, CurrencyId = @currId, ReportingCurrencyAmount = @amount, ModifiedAtUtc = GETUTCDATE()
-                                    WHERE BankAccountId = @accId AND ReportingPeriodId = @perId AND ReportVersionId = @verId
-                                `);
-                        } else {
-                            throw err;
-                        }
-                    }
+                            END
+                        `);
                 }
             } 
             else if (row.TargetRecordType === 'CASH_FLOW_IN' || row.TargetRecordType === 'CASH_FLOW_OUT') {
@@ -186,8 +171,17 @@ async function processBatchData(batchId) {
                     .input('endDate', sql.Date, data.bucketEndDate)
                     .input('amount', sql.Decimal(18,2), data.amount)
                     .query(`
-                        INSERT INTO treasury.CashFlowForecast (ReportingPeriodId, ReportVersionId, BusinessUnitId, CashFlowCategoryId, BucketStartDate, BucketEndDate, BucketType, Amount, CurrencyId, SourceType)
-                        VALUES (@perId, @verId, 1, @catId, @startDate, @endDate, 'Monthly', @amount, 1, 'Upload')
+                        IF EXISTS (SELECT 1 FROM treasury.CashFlowForecast WHERE ReportingPeriodId = @perId AND ReportVersionId = @verId AND CashFlowCategoryId = @catId AND BucketStartDate = @startDate)
+                        BEGIN
+                            UPDATE treasury.CashFlowForecast
+                            SET Amount = @amount, ModifiedAtUtc = GETUTCDATE()
+                            WHERE ReportingPeriodId = @perId AND ReportVersionId = @verId AND CashFlowCategoryId = @catId AND BucketStartDate = @startDate
+                        END
+                        ELSE
+                        BEGIN
+                            INSERT INTO treasury.CashFlowForecast (ReportingPeriodId, ReportVersionId, BusinessUnitId, CashFlowCategoryId, BucketStartDate, BucketEndDate, BucketType, Amount, CurrencyId, SourceType)
+                            VALUES (@perId, @verId, 1, @catId, @startDate, @endDate, 'Monthly', @amount, 1, 'Upload')
+                        END
                     `);
             }
             else if (row.TargetRecordType === 'WORKING_CAPITAL') {
@@ -201,8 +195,17 @@ async function processBatchData(batchId) {
                         .input('available', sql.Decimal(18,2), data.totalLimit - data.utilized)
                         .input('pct', sql.Decimal(5,2), data.totalLimit ? (data.utilized / data.totalLimit) * 100 : 0)
                         .query(`
-                            INSERT INTO treasury.FacilityUtilization (FacilityId, ReportingPeriodId, ReportVersionId, AsOfDate, UtilizedAmount, UnderProcessAmount, AvailableAmount, UtilizationPct, SourceType)
-                            VALUES (@fId, @perId, @verId, CAST(GETUTCDATE() AS DATE), @utilized, 0, @available, @pct, 'Upload')
+                            IF EXISTS (SELECT 1 FROM treasury.FacilityUtilization WHERE FacilityId = @fId AND ReportingPeriodId = @perId AND ReportVersionId = @verId)
+                            BEGIN
+                                UPDATE treasury.FacilityUtilization
+                                SET UtilizedAmount = @utilized, AvailableAmount = @available, UtilizationPct = @pct, ModifiedAtUtc = GETUTCDATE()
+                                WHERE FacilityId = @fId AND ReportingPeriodId = @perId AND ReportVersionId = @verId
+                            END
+                            ELSE
+                            BEGIN
+                                INSERT INTO treasury.FacilityUtilization (FacilityId, ReportingPeriodId, ReportVersionId, AsOfDate, UtilizedAmount, UnderProcessAmount, AvailableAmount, UtilizationPct, SourceType)
+                                VALUES (@fId, @perId, @verId, CAST(GETUTCDATE() AS DATE), @utilized, 0, @available, @pct, 'Upload')
+                            END
                         `);
                 }
             }
@@ -213,8 +216,17 @@ async function processBatchData(batchId) {
                     .input('type', sql.VarChar, row.TargetRecordType === 'LOAN_ST' ? 'ST' : 'LT')
                     .input('amount', sql.Decimal(18,2), data.currentOutstanding)
                     .query(`
-                        INSERT INTO treasury.Loan (BusinessUnitId, LoanReference, LenderName, LoanTypeCode, CurrencyId, OriginalLoanAmount, CurrentOutstanding, LoanStatus)
-                        VALUES (1, @ref, @lender, @type, 1, @amount, @amount, 'ACTIVE')
+                        IF EXISTS (SELECT 1 FROM treasury.Loan WHERE LoanReference = @ref)
+                        BEGIN
+                            UPDATE treasury.Loan
+                            SET CurrentOutstanding = @amount, ModifiedAtUtc = GETUTCDATE()
+                            WHERE LoanReference = @ref
+                        END
+                        ELSE
+                        BEGIN
+                            INSERT INTO treasury.Loan (BusinessUnitId, LoanReference, LenderName, LoanTypeCode, CurrencyId, OriginalLoanAmount, CurrentOutstanding, LoanStatus)
+                            VALUES (1, @ref, @lender, @type, 1, @amount, @amount, 'ACTIVE')
+                        END
                     `);
             }
             else if (row.TargetRecordType === 'LOAN_MOVEMENT') {
@@ -258,9 +270,18 @@ async function processBatchData(batchId) {
                         .input('newAmt', sql.Decimal(18,2), data.newDrawdownAmount)
                         .input('closeOS', sql.Decimal(18,2), data.closingOutstanding)
                         .query(`
-                            INSERT INTO treasury.LoanMovementForecast 
-                            (LoanId, ReportingPeriodId, ReportVersionId, BucketStartDate, BucketEndDate, OpeningOutstanding, PaymentAmount, NewDrawdownAmount, ClosingOutstanding)
-                            VALUES (@lId, @perId, @verId, @startDate, @endDate, @openOS, @payAmt, @newAmt, @closeOS)
+                            IF EXISTS (SELECT 1 FROM treasury.LoanMovementForecast WHERE LoanId = @lId AND ReportingPeriodId = @perId AND ReportVersionId = @verId AND BucketStartDate = @startDate)
+                            BEGIN
+                                UPDATE treasury.LoanMovementForecast
+                                SET OpeningOutstanding = @openOS, PaymentAmount = @payAmt, NewDrawdownAmount = @newAmt, ClosingOutstanding = @closeOS
+                                WHERE LoanId = @lId AND ReportingPeriodId = @perId AND ReportVersionId = @verId AND BucketStartDate = @startDate
+                            END
+                            ELSE
+                            BEGIN
+                                INSERT INTO treasury.LoanMovementForecast 
+                                (LoanId, ReportingPeriodId, ReportVersionId, BucketStartDate, BucketEndDate, OpeningOutstanding, PaymentAmount, NewDrawdownAmount, ClosingOutstanding)
+                                VALUES (@lId, @perId, @verId, @startDate, @endDate, @openOS, @payAmt, @newAmt, @closeOS)
+                            END
                         `);
                 }
             }
