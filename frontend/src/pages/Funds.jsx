@@ -1,24 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
 
 const Funds = () => {
-  const [balances, setBalances] = useState([]);
-  const [summary, setSummary] = useState({ liquidityReserve: 0, workingCapitalReserve: 0 });
-  const [loading, setLoading] = useState(true);
+  const { globalData, globalLoading, globalError } = useData();
 
-  useEffect(() => {
-    axios.get('/api/funds')
-      .then(res => {
-        setBalances(res.data.balances || []);
-        setSummary(res.data.summary || { liquidityReserve: 0, workingCapitalReserve: 0 });
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  if (globalLoading) return <div className="empty animate-pulse-dot">Loading Funds Data...</div>;
+  if (globalError || !globalData) return <div className="empty text-danger">Failed to load funds data.</div>;
+
+  const balances = globalData.funds.balances;
+  const summary = globalData.funds.summary;
+  const loading = false;
 
   const formatMn = (val) => val ? (val / 1000000).toFixed(2) : '0.00';
 
@@ -117,10 +110,10 @@ const Funds = () => {
                     <div style={{ fontWeight: 'bold', textAlign: 'center', fontSize: '12px', marginBottom: '10px' }}>
                         Bank wise Fund Position in<br/>QAR Currency (Total QAR {totalQarMn.toFixed(2)} mn)
                     </div>
-                    <div style={{ height: '140px' }}>
+                    <div style={{ height: '150px' }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={qarByBankData} margin={{ top: 25, right: 10, left: 10, bottom: 5 }}>
-                                <XAxis dataKey="name" axisLine={true} tickLine={false} tick={false} />
+                            <BarChart data={qarByBankData} margin={{ top: 25, right: 10, left: 10, bottom: 30 }}>
+                                <XAxis dataKey="name" axisLine={true} tickLine={false} tick={{ fontSize: 9, angle: -45, textAnchor: 'end' }} interval={0} />
                                 <Tooltip cursor={{fill: 'transparent'}} />
                                 <Bar dataKey="value" fill="#4a90e2" barSize={16}>
                                      <LabelList dataKey="value" content={renderCustomLabel} />
@@ -134,10 +127,10 @@ const Funds = () => {
                     <div style={{ fontWeight: 'bold', textAlign: 'center', fontSize: '12px', marginBottom: '10px' }}>
                         Bank wise Fund in USD Currency<br/>(Total USD {totalUsdMn.toFixed(2)} mn)
                     </div>
-                    <div style={{ height: '140px' }}>
+                    <div style={{ height: '150px' }}>
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={usdByBankData} margin={{ top: 25, right: 10, left: 10, bottom: 5 }}>
-                                <XAxis dataKey="name" axisLine={true} tickLine={false} tick={false} />
+                            <BarChart data={usdByBankData} margin={{ top: 25, right: 10, left: 10, bottom: 30 }}>
+                                <XAxis dataKey="name" axisLine={true} tickLine={false} tick={{ fontSize: 9, angle: -45, textAnchor: 'end' }} interval={0} />
                                 <Tooltip cursor={{fill: 'transparent'}} />
                                 <Bar dataKey="value" fill="#4a90e2" barSize={16}>
                                      <LabelList dataKey="value" content={renderCustomLabel} />

@@ -1,22 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const Loans = () => {
-  const [loans, setLoans] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { globalData, globalLoading, globalError } = useData();
 
-  useEffect(() => {
-    axios.get('/api/loans')
-      .then(res => {
-        setLoans(res.data.loans || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  if (globalLoading) return <div className="empty animate-pulse-dot">Loading Loan Data...</div>;
+  if (globalError || !globalData) return <div className="empty text-danger">Failed to load loan data.</div>;
+
+  const loans = globalData.loans.loans;
+  const loading = false;
 
   const totalDebt = loans.reduce((sum, l) => sum + (l.CurrentOutstanding || 0), 0);
 

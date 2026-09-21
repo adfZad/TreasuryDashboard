@@ -12,8 +12,8 @@ export const AuthProvider = ({ children }) => {
         const savedUser = localStorage.getItem('user');
         
         if (token && savedUser) {
-            setUser(JSON.parse(savedUser));
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setUser(JSON.parse(savedUser));
         }
         setLoading(false);
     }, []);

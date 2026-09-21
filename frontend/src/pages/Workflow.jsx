@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
 
 const Workflow = () => {
+  const { user } = useContext(AuthContext);
   const [pendingBatches, setPendingBatches] = useState([]);
   const [historyBatches, setHistoryBatches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,9 +16,11 @@ const Workflow = () => {
   const [commentsLoading, setCommentsLoading] = useState(false);
 
   useEffect(() => {
-    fetchPending();
-    fetchHistory();
-  }, []);
+    if (user) {
+      fetchPending();
+      fetchHistory();
+    }
+  }, [user]);
 
   const fetchPending = async () => {
     try {

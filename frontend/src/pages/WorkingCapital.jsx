@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 
 const WorkingCapital = () => {
-  const [facilities, setFacilities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { globalData, globalLoading, globalError } = useData();
 
-  useEffect(() => {
-    axios.get('/api/workingcapital')
-      .then(res => {
-        setFacilities(res.data.facilities || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  if (globalLoading) return <div className="empty animate-pulse-dot">Loading Working Capital Data...</div>;
+  if (globalError || !globalData) return <div className="empty text-danger">Failed to load working capital data.</div>;
+
+  const facilities = globalData.wc.facilities;
+  const loading = false;
 
   const totalSanctioned = facilities.reduce((sum, f) => sum + (f.SanctionedLimit || 0), 0);
   const totalUtilized = facilities.reduce((sum, f) => sum + (f.UtilizedAmount || 0), 0);

@@ -1,22 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const Movement = () => {
-  const [movements, setMovements] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { globalData, globalLoading, globalError } = useData();
 
-  useEffect(() => {
-    axios.get('/api/movement')
-      .then(res => {
-        setMovements(res.data.movements || []);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  if (globalLoading) return <div className="empty animate-pulse-dot">Loading Movement Data...</div>;
+  if (globalError || !globalData) return <div className="empty text-danger">Failed to load movement data.</div>;
+
+  const movements = globalData.movement.movements;
+  const loading = false;
 
   // Aggregate by BucketStartDate
   const aggregatedData = movements.reduce((acc, curr) => {

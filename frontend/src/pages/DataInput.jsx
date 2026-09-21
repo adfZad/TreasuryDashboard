@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 
 const DataInput = () => {
+  const { refreshData } = useData();
   const [file, setFile] = useState(null);
   const [module, setModule] = useState('MASTER_REPORT');
   const [loading, setLoading] = useState(false);
@@ -53,6 +55,7 @@ const DataInput = () => {
       // Reset file input
       document.getElementById('fileUpload').value = '';
       fetchBatches(); // Refresh history
+      refreshData(); // Refresh global dashboard context!
       setComment(''); // Clear comment after successful upload
     } catch (err) {
       const errorData = err.response?.data;

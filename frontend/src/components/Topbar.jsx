@@ -37,6 +37,11 @@ const Topbar = ({ title, subtitle }) => {
       <div>
         <h1 id="pageTitle">{title}</h1>
         <p id="pageSubtitle">{subtitle}</p>
+        {title !== 'Executive Treasury Dashboard' && (
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginTop: '2px', fontWeight: 300 }}>
+            Position as on 15 August 2026 - Amounts in QAR million unless stated
+          </p>
+        )}
       </div>
       <div className="top-actions" style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
         

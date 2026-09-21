@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import Funds from './Funds';
@@ -30,44 +31,21 @@ const Accordion = ({ title, children }) => {
 };
 
 const Dashboard = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { globalData, globalLoading, globalError } = useData();
 
-  useEffect(() => {
-    Promise.all([
-        axios.get('/api/dashboard'),
-        axios.get('/api/funds'),
-        axios.get('/api/cashflow'),
-        axios.get('/api/workingcapital'),
-        axios.get('/api/loans'),
-        axios.get('/api/debt')
-    ]).then(responses => {
-        setData({
-            kpi: responses[0].data,
-            funds: responses[1].data.balances || [],
-            cashflow: responses[2].data.forecasts || [],
-            wc: responses[3].data.facilities || [],
-            loans: responses[4].data.loans || [],
-            debt: responses[5].data.kpi || {}
-        });
-    }).catch(err => {
-        console.error(err);
-        setError(true);
-    }).finally(() => {
-        setLoading(false);
-    });
-  }, []);
-
-  if (loading) return <div className="empty animate-pulse-dot">Loading Dashboard...</div>;
-  if (error || !data) return <div className="empty text-danger" style={{ cursor: 'pointer' }} onClick={() => window.location.reload()}>Failed to load data. The database might be busy. Click here to refresh.</div>;
+  if (globalLoading) return <div className="empty animate-pulse-dot">Loading Dashboard...</div>;
+  if (globalError || !globalData) return <div className="empty text-danger" style={{ cursor: 'pointer' }} onClick={() => window.location.reload()}>Failed to load data. The database might be busy. Click here to refresh.</div>;
 
   const formatNum = (num, digits = 2) => {
     if (num === null || num === undefined || isNaN(num)) return '0.00';
     return new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: digits }).format(num);
   };
 
-  const { kpi, funds, cashflow, wc, loans, debt } = data;
+  const { kpi, funds, cashflow, wc, loans, debt } = globalData;
+  const fundsBalances = funds.balances || [];
+  const cashflowForecasts = cashflow.forecasts || [];
+  const wcFacilities = wc.facilities || [];
+  const loansData = loans.loans || [];
 
   // KPIs
   const totalBank = kpi?.bankBalance || 0;
@@ -77,13 +55,13 @@ const Dashboard = () => {
   const debtEquity = kpi?.totalEquity > 0 ? (totalLoans / kpi.totalEquity).toFixed(2) : '0.00';
   
   // Net Cash Flow (Sum)
-  const netCash = cashflow.reduce((sum, curr) => sum + (curr.DirectionCode === 'IN' ? curr.Amount : -Math.abs(curr.Amount)), 0);
+  const netCash = cashflowForecasts.reduce((sum, curr) => sum + (curr.DirectionCode === 'IN' ? curr.Amount : -Math.abs(curr.Amount)), 0);
 
   // Funds Chart Data
-  const fundsChartData = funds.map(b => ({ name: b.BankName, value: b.ClosingBalance }));
+  const fundsChartData = fundsBalances.map(b => ({ name: b.BankName, value: b.ClosingBalance }));
   
   // Cashflow Chart Data
-  const cfGrouped = cashflow.reduce((acc, curr) => {
+  const cfGrouped = cashflowForecasts.reduce((acc, curr) => {
     const date = new Date(curr.BucketStartDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     if (!acc[date]) acc[date] = { name: date, Inflows: 0, Outflows: 0 };
     if (curr.DirectionCode === 'IN') acc[date].Inflows += curr.Amount;
@@ -93,7 +71,7 @@ const Dashboard = () => {
   const cashflowChartData = Object.values(cfGrouped);
 
   // WC Chart Data
-  const wcGrouped = wc.reduce((acc, curr) => {
+  const wcGrouped = wcFacilities.reduce((acc, curr) => {
       const bank = curr.BankName;
       if (!acc[bank]) acc[bank] = { name: bank, Sanctioned: 0, Utilized: 0 };
       acc[bank].Sanctioned += curr.SanctionedLimit;
@@ -104,8 +82,8 @@ const Dashboard = () => {
   const highUtilCount = wcChartData.filter(x => x.Sanctioned > 0 && (x.Utilized / x.Sanctioned) >= 0.8).length;
 
   // Debt Mix
-  const stl = loans.filter(l => l.LoanTypeCode === 'STL').reduce((sum, l) => sum + l.CurrentOutstanding, 0);
-  const ltl = loans.filter(l => l.LoanTypeCode === 'LTL').reduce((sum, l) => sum + l.CurrentOutstanding, 0);
+  const stl = loansData.filter(l => l.LoanTypeCode === 'STL').reduce((sum, l) => sum + l.CurrentOutstanding, 0);
+  const ltl = loansData.filter(l => l.LoanTypeCode === 'LTL').reduce((sum, l) => sum + l.CurrentOutstanding, 0);
   const debtMixData = [
       { name: 'Short Term', value: stl, color: '#4F46E5' },
       { name: 'Long Term', value: ltl, color: '#10B981' }

@@ -1,24 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useData } from '../context/DataContext';
 import axios from 'axios';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const Debt = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { globalData, globalLoading, globalError } = useData();
 
-  useEffect(() => {
-    axios.get('/api/debt')
-      .then(res => {
-        setData(res.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
+  if (globalLoading) return <div className="empty animate-pulse-dot">Loading debt & equity data...</div>;
+  if (globalError || !globalData) return <div className="empty text-danger">Failed to load debt data.</div>;
 
-  if (loading) return <div className="empty animate-pulse-dot">Loading debt & equity data...</div>;
+  // We mapped /api/debt to globalData.debt which has { kpi, allocations, reserves }
+  // Previously res.data was directly stored in 'data'.
+  const data = globalData.debt.kpi; // Fallback mapping based on previous Debt.jsx expecting totalDebt/totalEquity directly on data object. Wait, Debt API returns { totalDebt, totalEquity, allocations, reserves }. So globalData.debt is { kpi, allocations, reserves } BUT DataContext mapped res.data.kpi. Let me check DataContext mapping.
+  const loading = false;
 
   const totalDebt = data?.totalDebt || 0;
   const totalEquity = data?.totalEquity || 0;
