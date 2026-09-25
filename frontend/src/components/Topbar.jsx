@@ -38,7 +38,7 @@ const Topbar = ({ title, subtitle }) => {
         <h1 id="pageTitle">{title}</h1>
         <p id="pageSubtitle">{subtitle}</p>
         {title !== 'Executive Treasury Dashboard' && (
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', marginTop: '2px', fontWeight: 300 }}>
+          <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.7)', marginTop: '0', fontWeight: 300 }}>
             Position as on 15 August 2026 - Amounts in QAR million unless stated
           </p>
         )}
@@ -79,20 +79,20 @@ const Topbar = ({ title, subtitle }) => {
               border: '1px solid #cfd7e3',
               background: 'white',
               borderRadius: '8px',
-              padding: '8px 14px',
+              padding: '6px 14px',
               color: 'var(--text)',
-              fontSize: '13px',
+              fontSize: '11px',
               fontWeight: '600',
               display: 'flex',
               alignItems: 'center',
               boxSizing: 'border-box',
-              height: '35px' 
+              height: '30px' 
             }}>
               {roleName}
             </div>
           </div>
         )}
-        <button className="secondary-btn" id="exportBtn" style={{ height: '35px' }}>Export Data</button>
+        <button className="secondary-btn" id="exportBtn" style={{ height: '30px', fontSize: '11px', padding: '6px 14px' }}>Export Data</button>
       </div>
     </header>
   );
