@@ -139,6 +139,7 @@ app.get('/api/workingcapital', async (req, res) => {
             SELECT 
                 wcf.FacilityReference, 
                 b.BankName, 
+                c.CountryName as Region,
                 ft.FacilityTypeName, 
                 wcf.SanctionedLimit, 
                 fu.UtilizedAmount, 
@@ -148,6 +149,7 @@ app.get('/api/workingcapital', async (req, res) => {
             JOIN treasury.FacilityUtilization fu ON wcf.FacilityId = fu.FacilityId
             JOIN ref.Bank b ON wcf.BankId = b.BankId
             JOIN ref.FacilityType ft ON wcf.FacilityTypeId = ft.FacilityTypeId
+            LEFT JOIN ref.Country c ON b.CountryId = c.CountryId
         `);
         res.json({ facilities: result.recordset });
     } catch (err) {
