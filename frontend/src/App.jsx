@@ -25,7 +25,7 @@ function MainLayout() {
           <Route path="/" element={<><Topbar title="Executive Treasury Dashboard" subtitle="Position as on 15 August 2026 · Amounts in QAR million unless stated" /><div className="content"><Dashboard /></div></>} />
           <Route path="/funds" element={<><Topbar title="Funds Position" subtitle="Bank balances and liquidity allocation" /><div className="content"><Funds /></div></>} />
           <Route path="/cashflow" element={<><Topbar title="Cash Flow Projection" subtitle="August to October 2026" /><div className="content"><CashFlow /></div></>} />
-          <Route path="/workingcapital" element={<><Topbar title="Working Capital Finance" subtitle="Facility limits and utilisation" /><div className="content"><WorkingCapital /></div></>} />
+          <Route path="/workingcapital" element={<><Topbar title="Working Capital Finance - LIMITS AND UTILISATION" subtitle="Facility limits and utilisation" /><div className="content"><WorkingCapital /></div></>} />
           <Route path="/loans" element={<><Topbar title="Loan Position" subtitle="Outstanding and repayment schedule" /><div className="content"><Loans /></div></>} />
           <Route path="/debt" element={<><Topbar title="Debt & Liquidity" subtitle="Debt, equity and liquid assets" /><div className="content"><Debt /></div></>} />
           <Route path="/movement" element={<><Topbar title="Projected Loan Movement" subtitle="Repayment and new loan projection" /><div className="content"><Movement /></div></>} />
@@ -37,12 +37,14 @@ function MainLayout() {
     </div>
   );
 }
+import ScrollToTop from './components/ScrollToTop';
 
 function App() {
   return (
     <AuthProvider>
       <DataProvider>
         <Router>
+          <ScrollToTop />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/*" element={
