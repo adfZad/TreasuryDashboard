@@ -42,6 +42,13 @@ router.post('/excel', protect, upload.single('file'), async (req, res) => {
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         console.log("Workbook parsed");
         
+        const fs = require('fs');
+        const path = require('path');
+        const uploadDir = path.join(__dirname, '../uploads');
+        if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+        fs.writeFileSync(path.join(uploadDir, 'latest_treasury_report.xlsx'), req.file.buffer);
+        console.log("Saved to latest_treasury_report.xlsx for custom parsers");
+        
         // Parse the specific module (or all if MASTER_REPORT)
         const parsedData = parseSpecificModule(workbook, module);
         console.log("Module extracted", Object.keys(parsedData).map(k => `${k}: ${parsedData[k]?.length || 0}`));

@@ -6,7 +6,7 @@ const { sql, poolPromise } = require('./db');
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5002;
 
 app.use(cors());
 app.use(express.json());
@@ -176,6 +176,205 @@ app.get('/api/loans', async (req, res) => {
     }
 });
 
+const xlsx = require('xlsx');
+
+app.get('/api/loans/excel', (req, res) => {
+    try {
+        const filePath = getLatestExcelFile();
+        const workbook = xlsx.readFile(filePath);
+        const worksheet = workbook.Sheets['4. Loan'];
+        const data = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+        const shortTerm = [];
+        for (let i = 10; i <= 15; i++) {
+            const row = data[i];
+            shortTerm.push({
+                bank: row[0],
+                aug26: parseFloat(row[1]) || 0,
+                sep26: parseFloat(row[2]) || 0,
+                oct26: parseFloat(row[3]) || 0,
+                totalOS: parseFloat(row[4]) || 0,
+                label: row[5] || row[0]
+            });
+        }
+        
+        const longTerm = [];
+        for (let i = 20; i <= 24; i++) {
+            const row = data[i];
+            if (!row || !row[0]) continue;
+            longTerm.push({
+                bank: row[0]?.replace(/\r\n/g, ' '),
+                desc: row[1],
+                amount: parseFloat(row[2]) || 0,
+                tenure: row[3],
+                start: row[4],
+                end: row[5],
+                freq: row[6],
+                paid2025: parseFloat(row[7]) || 0,
+                paid2026: parseFloat(row[8]) || 0,
+                balance: parseFloat(row[9]) || 0,
+                y2026: parseFloat(row[10]) || 0,
+                y2027: parseFloat(row[11]) || 0,
+                y2028: parseFloat(row[12]) || 0,
+                y2029: parseFloat(row[13]) || 0,
+                y2030: parseFloat(row[14]) || 0,
+                y2031: parseFloat(row[15]) || 0,
+                y2032: parseFloat(row[16]) || 0,
+                y2033: parseFloat(row[17]) || 0,
+                y2034: parseFloat(row[18]) || 0,
+                y2035_2038: parseFloat(row[19]) || 0
+            });
+        }
+
+        if (data[27] && data[27][0]) {
+            const row = data[27];
+            longTerm.push({
+                bank: row[0]?.replace(/\r\n/g, ' '),
+                desc: row[1],
+                amount: parseFloat(row[2]) || 0,
+                tenure: row[3],
+                start: row[4],
+                end: row[5],
+                freq: row[6],
+                paid2025: parseFloat(row[7]) || 0,
+                paid2026: parseFloat(row[8]) || 0,
+                balance: parseFloat(row[9]) || 0,
+                y2026: parseFloat(row[10]) || 0,
+                y2027: parseFloat(row[11]) || 0,
+                y2028: parseFloat(row[12]) || 0,
+                y2029: parseFloat(row[13]) || 0,
+                y2030: parseFloat(row[14]) || 0,
+                y2031: parseFloat(row[15]) || 0,
+                y2032: parseFloat(row[16]) || 0,
+                y2033: parseFloat(row[17]) || 0,
+                y2034: parseFloat(row[18]) || 0,
+                y2035_2038: parseFloat(row[19]) || 0,
+                isNew: true
+            });
+        }
+        
+        // First Total row (Row 25)
+        if (data[25] && data[25][1] && data[25][1].indexOf('Total') > -1) {
+            const r25 = data[25];
+            longTerm.push({
+                bank: 'Total',
+                desc: r25[1],
+                amount: parseFloat(r25[2]) || 0,
+                tenure: r25[3],
+                start: r25[4],
+                end: r25[5],
+                freq: r25[6],
+                paid2025: parseFloat(r25[7]) || 0,
+                paid2026: parseFloat(r25[8]) || 0,
+                balance: parseFloat(r25[9]) || 0,
+                y2026: parseFloat(r25[10]) || 0,
+                y2027: parseFloat(r25[11]) || 0,
+                y2028: parseFloat(r25[12]) || 0,
+                y2029: parseFloat(r25[13]) || 0,
+                y2030: parseFloat(r25[14]) || 0,
+                y2031: parseFloat(r25[15]) || 0,
+                y2032: parseFloat(r25[16]) || 0,
+                y2033: parseFloat(r25[17]) || 0,
+                y2034: parseFloat(r25[18]) || 0,
+                y2035_2038: parseFloat(r25[19]) || 0
+            });
+        }
+        
+        // Final Total row (Row 28)
+        if (data[28] && data[28][0] && data[28][0].indexOf('Total') > -1) {
+            const r28 = data[28];
+            longTerm.push({
+                bank: r28[0]?.replace(/\r\n/g, ' '),
+                desc: r28[1] || 'Total',
+                amount: parseFloat(r28[2]) || 0,
+                tenure: r28[3],
+                start: r28[4],
+                end: r28[5],
+                freq: r28[6],
+                paid2025: parseFloat(r28[7]) || 0,
+                paid2026: parseFloat(r28[8]) || 0,
+                balance: parseFloat(r28[9]) || 0,
+                y2026: parseFloat(r28[10]) || 0,
+                y2027: parseFloat(r28[11]) || 0,
+                y2028: parseFloat(r28[12]) || 0,
+                y2029: parseFloat(r28[13]) || 0,
+                y2030: parseFloat(r28[14]) || 0,
+                y2031: parseFloat(r28[15]) || 0,
+                y2032: parseFloat(r28[16]) || 0,
+                y2033: parseFloat(r28[17]) || 0,
+                y2034: parseFloat(r28[18]) || 0,
+                y2035_2038: parseFloat(r28[19]) || 0
+            });
+        }
+
+        res.json({ shortTerm, longTerm });
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+});
+
+app.get('/api/debt/excel', (req, res) => {
+    try {
+        const filePath = getLatestExcelFile();
+        const workbook = xlsx.readFile(filePath);
+        const worksheet = workbook.Sheets['5. Debt & Equity'];
+        if (!worksheet) {
+            return res.status(404).json({ error: "Sheet '5. Debt & Equity' not found" });
+        }
+        const data = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+        const debtOverview = {
+            shortTerm: parseFloat(data[10]?.[2]) || 0,
+            longTerm: parseFloat(data[11]?.[2]) || 0,
+            fd: parseFloat(data[12]?.[2]) || 0,
+            liquidityReserve: parseFloat(data[13]?.[2]) || 0,
+            equityBookValue: parseFloat(data[17]?.[7]) || parseFloat(data[17]?.[8]) || 0
+        };
+
+        const getRowData = (rowIdx, startIdx, endIdx) => {
+            if (!data[rowIdx]) return [];
+            return data[rowIdx].slice(startIdx, endIdx + 1).map(v => parseFloat(v) || 0);
+        };
+
+        const debtEquityRatio = {
+            periods: data[21]?.slice(2, 7) || [],
+            debt: getRowData(22, 2, 6),
+            equity: getRowData(23, 2, 6),
+            ratio: getRowData(24, 2, 6)
+        };
+
+        const liquidAssetsCost = {
+            periods: data[28]?.slice(2, 7) || [],
+            debt: getRowData(29, 2, 6),
+            liquidAssets: getRowData(30, 2, 6),
+            cashAtBank: getRowData(31, 2, 6),
+            investmentsShares: getRowData(32, 2, 6),
+            investmentsMetal: getRowData(33, 2, 6),
+            ratio: getRowData(34, 2, 6)
+        };
+
+        const liquidAssetsMkt = {
+            periods: data[38]?.slice(2, 7) || [],
+            debt: getRowData(39, 2, 6),
+            liquidAssets: getRowData(40, 2, 6),
+            cashAtBank: getRowData(41, 2, 6),
+            investmentsShares: getRowData(42, 2, 6),
+            investmentsMetal: getRowData(43, 2, 6),
+            ratio: getRowData(44, 2, 6)
+        };
+
+        res.json({
+            debtOverview,
+            debtEquityRatio,
+            liquidAssetsCost,
+            liquidAssetsMkt
+        });
+    } catch (err) {
+        console.error("Debt parser error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/debt', async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -264,13 +463,42 @@ app.post('/api/workflow', async (req, res) => {
     }
 });
 
-app.post('/api/data', async (req, res) => {
-    // Dummy endpoint for Data Input UI
-    setTimeout(() => res.json({ success: true, message: "Data successfully received and staged for validation." }), 1000);
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir)
+    },
+    filename: function (req, file, cb) {
+        cb(null, 'latest_treasury_report.xlsx')
+    }
+});
+const upload = multer({ storage: storage });
+
+function getLatestExcelFile() {
+    const uploadedFile = path.join(__dirname, 'uploads', 'latest_treasury_report.xlsx');
+    if (fs.existsSync(uploadedFile)) {
+        return uploadedFile;
+    }
+    return path.join(__dirname, '../00. Treasury report as on 15Aug2026.xlsx');
+}
+
+app.post('/api/data', upload.single('excelFile'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+    // Simulate some validation time
+    setTimeout(() => res.json({ success: true, message: "Excel file successfully processed and staged for validation." }), 1000);
 });
 
 // Serve static frontend files for production
-const path = require('path');
 app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 // Fallback for React Router

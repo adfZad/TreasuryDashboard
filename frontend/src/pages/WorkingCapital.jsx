@@ -138,7 +138,7 @@ const WorkingCapital = () => {
   return (
     <div>
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', marginTop: '-10px', borderBottom: '1px solid var(--border)' }}>
         <button 
           onClick={() => setActiveTab('bank')}
           style={{ padding: '10px 15px', background: 'none', border: 'none', borderBottom: activeTab === 'bank' ? '2px solid var(--blue)' : '2px solid transparent', color: activeTab === 'bank' ? 'var(--blue)' : 'var(--muted)', fontWeight: activeTab === 'bank' ? '700' : '500', cursor: 'pointer', transition: 'all 0.2s ease', fontSize: '11px' }}
