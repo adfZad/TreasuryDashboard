@@ -59,10 +59,10 @@ const CashFlow = () => {
                       <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 11 }} axisLine={false} tickLine={false} />
                       <Tooltip cursor={{ fill: 'var(--surface-2)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-dropdown)' }} />
                       <Legend verticalAlign="top" align="center" wrapperStyle={{ paddingBottom: 10, fontSize: 12 }} />
-                      <Bar dataKey="Inflows" fill="#10B981" radius={[4, 4, 0, 0]} barSize={20}>
+                      <Bar dataKey="Inflows" fill="url(#grad-10B981)" radius={[4, 4, 0, 0]} barSize={20}>
                         <LabelList dataKey="Inflows" position="top" fill="var(--text-primary)" fontSize={11} formatter={(val) => val ? parseFloat(val).toFixed(1) : ''} />
                       </Bar>
-                      <Bar dataKey="Outflows" fill="#F43F5E" radius={[4, 4, 0, 0]} barSize={20}>
+                      <Bar dataKey="Outflows" fill="url(#grad-F43F5E)" radius={[4, 4, 0, 0]} barSize={20}>
                         <LabelList dataKey="Outflows" position="top" fill="var(--text-primary)" fontSize={11} formatter={(val) => val ? parseFloat(val).toFixed(1) : ''} />
                       </Bar>
                     </BarChart>
@@ -91,7 +91,7 @@ const CashFlow = () => {
                       <Bar dataKey="Surplus" radius={[4, 4, 0, 0]} barSize={20}>
                         <LabelList dataKey="Surplus" position="top" fill="var(--text-primary)" fontSize={11} formatter={(val) => (val !== undefined && val !== null) ? parseFloat(val).toFixed(1) : ''} />
                         {chartData.filter(d => d.name !== 'Total').map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.Surplus >= 0 ? '#10B981' : '#F43F5E'} />
+                          <Cell key={`cell-${index}`} fill={`url(#grad-${entry.Surplus >= 0 ? '10B981' : 'F43F5E'})`} />
                         ))}
                       </Bar>
                     </BarChart>

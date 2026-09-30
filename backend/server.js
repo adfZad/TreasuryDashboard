@@ -413,6 +413,70 @@ app.get('/api/movement', async (req, res) => {
     }
 });
 
+app.get('/api/movement/excel', (req, res) => {
+    try {
+        const filePath = getLatestExcelFile();
+        const workbook = xlsx.readFile(filePath);
+        const worksheet = workbook.Sheets['6. Loan movement'];
+        if (!worksheet) {
+            return res.status(404).json({ error: "Sheet '6. Loan movement' not found" });
+        }
+        const data = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+        const parseNum = (val) => {
+            if (!val || (typeof val === 'string' && val.trim() === '-')) return 0;
+            if (typeof val === 'string' && val.includes('(')) {
+                return -parseFloat(val.replace(/[\(\),]/g, ''));
+            }
+            return parseFloat(val) || 0;
+        };
+
+        const getRow = (idx) => {
+            if (!data[idx]) return [];
+            return [
+                data[idx][0], // Label
+                parseNum(data[idx][1]), // Initial
+                parseNum(data[idx][2]), parseNum(data[idx][3]), parseNum(data[idx][4]), // Aug
+                parseNum(data[idx][5]), parseNum(data[idx][6]), parseNum(data[idx][7]), // Sep
+                parseNum(data[idx][8]), parseNum(data[idx][9]), parseNum(data[idx][10]), // Oct
+                parseNum(data[idx][11]), parseNum(data[idx][12]), parseNum(data[idx][13]) // Nov
+            ];
+        };
+
+        const shortTerm = [4, 5, 6, 7, 8].map(getRow);
+        const totalA = getRow(9);
+        const longTerm = [11, 12, 13, 14, 15, 16, 17].map(getRow);
+        const totalB = getRow(18);
+        const totalLoans = getRow(19);
+        const liquidityReserve = getRow(21);
+        const totalC = getRow(22);
+        const netLoans = getRow(23);
+
+        const getSummaryRow = (idx) => {
+            if (!data[idx]) return [];
+            return [data[idx][0], parseNum(data[idx][1]), parseNum(data[idx][2]), parseNum(data[idx][3])];
+        };
+        const summary = [28, 29, 30, 31].map(getSummaryRow);
+        const summaryTotal = getSummaryRow(32);
+
+        const getQdbRow = (idx) => {
+            if (!data[idx]) return [];
+            return [data[idx][0], parseNum(data[idx][1]), parseNum(data[idx][2]), parseNum(data[idx][3])];
+        };
+        const qdb = [42, 43, 44, 45, 46].map(getQdbRow);
+        const qdbTotal = getQdbRow(47);
+
+        res.json({
+            schedule: { shortTerm, totalA, longTerm, totalB, totalLoans, liquidityReserve, totalC, netLoans },
+            summary: { banks: summary, total: summaryTotal },
+            qdb: { rows: qdb, total: qdbTotal }
+        });
+    } catch (err) {
+        console.error("Movement parser error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/workflow', async (req, res) => {
     try {
         const pool = await poolPromise;

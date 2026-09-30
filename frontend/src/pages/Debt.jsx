@@ -36,12 +36,24 @@ const Debt = () => {
 
   // Combo Chart Data Generator
   const buildComboData = (sourceData) => {
-    return sourceData.periods.map((period, i) => ({
-      name: period,
-      Debt: sourceData.debt[i] || 0,
-      LiquidAssets: sourceData.liquidAssets[i] || 0,
-      Ratio: sourceData.ratio[i] || 0
-    }));
+    return sourceData.periods.map((period, i) => {
+      let d = sourceData.debt[i] || 0;
+      let la = sourceData.liquidAssets[i] || 0;
+      let r = sourceData.ratio[i] || 0;
+
+      if (period === '15-Aug-2026') {
+        if (!d) d = totalDebt;
+        if (!la) la = Math.abs(overview.liquidityReserve);
+        if (!r) r = d ? (la / d) : 0;
+      }
+
+      return {
+        name: period,
+        Debt: d,
+        LiquidAssets: la,
+        Ratio: r
+      };
+    });
   };
 
   const comboCostData = buildComboData(laCost);
@@ -93,12 +105,12 @@ const Debt = () => {
               <BarChart data={netDebtData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis hide />
+                <YAxis hide domain={['auto', 'auto']} />
                 <Tooltip />
                 <Bar dataKey="value" barSize={40}>
                   <LabelList dataKey="value" position="top" fill="#333" fontSize={11} fontWeight="bold" formatter={(val) => val === 0 ? '-' : val} />
                   {netDebtData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
+                    <Cell key={`cell-${index}`} fill={`url(#grad-${entry.fill.replace('#', '')})`} />
                   ))}
                 </Bar>
               </BarChart>
@@ -149,8 +161,8 @@ const Debt = () => {
                 <YAxis yAxisId="right" tick={{ fontSize: 10 }} orientation="right" domain={[0, 6]} />
                 <Tooltip />
                 <Legend iconType="square" wrapperStyle={{ fontSize: '11px' }} />
-                <Bar yAxisId="left" dataKey="Debt" fill="#ff0000" barSize={20} />
-                <Bar yAxisId="left" dataKey="LiquidAssets" fill="#92d050" barSize={20} name="Liquid Assets" />
+                <Bar yAxisId="left" dataKey="Debt" fill="url(#grad-ff0000)" barSize={20} />
+                <Bar yAxisId="left" dataKey="LiquidAssets" fill="url(#grad-92d050)" barSize={20} name="Liquid Assets" />
                 <Line yAxisId="right" type="linear" dataKey="Ratio" stroke="#f79646" strokeWidth={2} dot={false} name="Liquid Assets to Debt (no of times) Cost basis">
                   <LabelList dataKey="Ratio" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(2)} />
                 </Line>
@@ -170,8 +182,8 @@ const Debt = () => {
                 <YAxis yAxisId="right" tick={{ fontSize: 10 }} orientation="right" domain={[0, 1.2]} />
                 <Tooltip />
                 <Legend iconType="square" wrapperStyle={{ fontSize: '11px' }} />
-                <Bar yAxisId="left" dataKey="Debt" fill="#ff0000" barSize={20} />
-                <Bar yAxisId="left" dataKey="LiquidAssets" fill="#92d050" barSize={20} name="Liquid Assets" />
+                <Bar yAxisId="left" dataKey="Debt" fill="url(#grad-ff0000)" barSize={20} />
+                <Bar yAxisId="left" dataKey="LiquidAssets" fill="url(#grad-92d050)" barSize={20} name="Liquid Assets" />
                 <Line yAxisId="right" type="linear" dataKey="Ratio" stroke="#f79646" strokeWidth={2} dot={false} name="Liquid Assets to Debt (no of times) Mkt Values">
                   <LabelList dataKey="Ratio" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(2)} />
                 </Line>

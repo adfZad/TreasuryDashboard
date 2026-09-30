@@ -175,10 +175,10 @@ const WorkingCapital = () => {
                       <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip cursor={{ fill: 'var(--surface-2)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-dropdown)' }} />
                       <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 10, top: -10 }} iconSize={8} />
-                      <Bar dataKey="Sanctioned" fill="#3479bd" barSize={15}>
+                      <Bar dataKey="Sanctioned" fill="url(#grad-3479bd)" barSize={15}>
                         <LabelList dataKey="Sanctioned" position="top" fill="var(--text-primary)" fontSize={9} formatter={(val) => val ? val.toFixed(0) : ''} />
                       </Bar>
-                      <Bar dataKey="Utilised" fill="#d94b4b" barSize={15}>
+                      <Bar dataKey="Utilised" fill="url(#grad-d94b4b)" barSize={15}>
                         <LabelList dataKey="Utilised" position="top" fill="var(--text-primary)" fontSize={9} formatter={(val) => val ? val.toFixed(0) : ''} />
                       </Bar>
                     </BarChart>
@@ -297,10 +297,10 @@ const WorkingCapital = () => {
                       <YAxis tick={{ fill: 'var(--text-muted)', fontSize: 10 }} axisLine={false} tickLine={false} />
                       <Tooltip cursor={{ fill: 'var(--surface-2)' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-dropdown)' }} />
                       <Legend verticalAlign="top" align="right" wrapperStyle={{ fontSize: 10, top: -10 }} iconSize={8} />
-                      <Bar dataKey="Sanctioned" fill="#eab308" barSize={15}>
+                      <Bar dataKey="Sanctioned" fill="url(#grad-eab308)" barSize={15}>
                         <LabelList dataKey="Sanctioned" position="top" fill="var(--text-primary)" fontSize={9} formatter={(val) => val ? val.toFixed(0) : ''} />
                       </Bar>
-                      <Bar dataKey="Utilised" fill="#8e24aa" barSize={15}>
+                      <Bar dataKey="Utilised" fill="url(#grad-8e24aa)" barSize={15}>
                         <LabelList dataKey="Utilised" position="top" fill="var(--text-primary)" fontSize={9} formatter={(val) => val ? val.toFixed(0) : ''} />
                       </Bar>
                     </BarChart>

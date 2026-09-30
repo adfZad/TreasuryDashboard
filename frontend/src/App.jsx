@@ -15,10 +15,12 @@ import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
+import GlobalGradients from './GlobalGradients';
 
 function MainLayout() {
   return (
     <div className="app-shell">
+      <GlobalGradients />
       <Sidebar />
       <main className="main">
         <Routes>

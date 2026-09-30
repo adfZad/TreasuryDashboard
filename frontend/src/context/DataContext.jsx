@@ -24,7 +24,8 @@ export const DataProvider = ({ children }) => {
             axios.get('/api/movement'),
             axios.get('/api/cashflow/comments').catch(() => ({ data: { comment: '' } })),
             axios.get('/api/loans/excel').catch(() => ({ data: { shortTerm: [], longTerm: [] } })),
-            axios.get('/api/debt/excel').catch(() => ({ data: {} }))
+            axios.get('/api/debt/excel').catch(() => ({ data: {} })),
+            axios.get('/api/movement/excel').catch(() => ({ data: null }))
         ]).then(responses => {
             setGlobalData({
                 kpi: responses[0].data,
@@ -50,7 +51,8 @@ export const DataProvider = ({ children }) => {
                     excelData: responses[9].data || {}
                 },
                 movement: {
-                    movements: responses[6].data.movements || []
+                    movements: responses[6].data.movements || [],
+                    excelData: responses[10].data || null
                 }
             });
         }).catch(err => {

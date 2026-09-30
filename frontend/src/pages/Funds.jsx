@@ -95,7 +95,7 @@ const Funds = () => {
                             <XAxis type="number" hide />
                             <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} width={40} tick={{fontSize: 11}} />
                             <Tooltip cursor={{fill: 'transparent'}} />
-                            <Bar dataKey="value" fill="#4a90e2" barSize={25}>
+                            <Bar dataKey="value" fill="url(#grad-4a90e2)" barSize={25}>
                                  <LabelList dataKey="value" content={renderHorizontalLabel} />
                             </Bar>
                         </BarChart>
@@ -115,7 +115,7 @@ const Funds = () => {
                             <BarChart data={qarByBankData} margin={{ top: 25, right: 10, left: 10, bottom: 30 }}>
                                 <XAxis dataKey="name" axisLine={true} tickLine={false} tick={{ fontSize: 9, angle: -45, textAnchor: 'end' }} interval={0} />
                                 <Tooltip cursor={{fill: 'transparent'}} />
-                                <Bar dataKey="value" fill="#4a90e2" barSize={16}>
+                                <Bar dataKey="value" fill="url(#grad-4a90e2)" barSize={16}>
                                      <LabelList dataKey="value" content={renderCustomLabel} />
                                 </Bar>
                             </BarChart>
@@ -132,7 +132,7 @@ const Funds = () => {
                             <BarChart data={usdByBankData} margin={{ top: 25, right: 10, left: 10, bottom: 30 }}>
                                 <XAxis dataKey="name" axisLine={true} tickLine={false} tick={{ fontSize: 9, angle: -45, textAnchor: 'end' }} interval={0} />
                                 <Tooltip cursor={{fill: 'transparent'}} />
-                                <Bar dataKey="value" fill="#4a90e2" barSize={16}>
+                                <Bar dataKey="value" fill="url(#grad-4a90e2)" barSize={16}>
                                      <LabelList dataKey="value" content={renderCustomLabel} />
                                 </Bar>
                             </BarChart>

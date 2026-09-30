@@ -94,7 +94,7 @@ const Loans = () => {
                     <Bar dataKey="totalOS" barSize={40}>
                       <LabelList dataKey="totalOS" position="top" fill="#333" fontSize={11} fontWeight="bold" />
                       {stData.filter(d => d.totalOS > 0).map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.bank === 'Total' ? '#e26b0a' : ST_COLORS[index % ST_COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={`url(#grad-${(entry.bank === 'Total' ? '#e26b0a' : ST_COLORS[index % ST_COLORS.length]).replace('#', '')})`} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -122,7 +122,7 @@ const Loans = () => {
                     <Bar dataKey="balance" barSize={40}>
                       <LabelList dataKey="balance" position="top" fill="#333" fontSize={11} fontWeight="bold" />
                       {[...ltDataCharts, { desc: 'Total' }].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.desc === 'Total' ? '#e26b0a' : LT_COLORS[index % LT_COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={`url(#grad-${(entry.desc === 'Total' ? '#e26b0a' : LT_COLORS[index % LT_COLORS.length]).replace('#', '')})`} />
                       ))}
                     </Bar>
                   </BarChart>
