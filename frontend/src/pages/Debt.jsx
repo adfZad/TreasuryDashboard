@@ -23,12 +23,15 @@ const Debt = () => {
   const totalEquity = overview.equityBookValue;
   const currentRatio = totalEquity > 0 ? (totalDebt / totalEquity).toFixed(2) : 'N/A';
 
+  const fundsSummary = globalData.funds?.summary || { liquidityReserve: 0 };
+  const liqReserveValue = overview.liquidityReserve || fundsSummary.liquidityReserve || 0;
+
   // Net Debt Chart Data
   const netDebtData = [
     { name: 'Short term loan', value: overview.shortTerm, fill: '#7030a0' },
     { name: 'Long term loan', value: overview.longTerm, fill: '#00b050' },
-    { name: 'Liquidity Reserve', value: overview.liquidityReserve, fill: '#c0504d' },
-    { name: 'Total', value: totalDebt - overview.liquidityReserve, fill: '#4f81bd' }
+    { name: 'Liquidity Reserve', value: -Math.abs(liqReserveValue), fill: '#c0504d' },
+    { name: 'Total', value: totalDebt - Math.abs(liqReserveValue), fill: '#4f81bd' }
   ];
 
   // Helper to format 0 as '-'
@@ -133,15 +136,27 @@ const Debt = () => {
                 <tbody>
                     <tr>
                         <td style={headerColStyle}>Debt</td>
-                        {deRatio.debt.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {deRatio.periods.map((_, i) => {
+                            const d = deRatio.debt[i] !== undefined ? deRatio.debt[i] : totalDebt;
+                            return <td key={i} style={tdStyle}>{fmt(d)}</td>;
+                        })}
                     </tr>
                     <tr>
                         <td style={headerColStyle}>Equity (Book value)</td>
-                        {deRatio.equity.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {deRatio.periods.map((_, i) => {
+                            return <td key={i} style={tdStyle}>{fmt(deRatio.equity[i])}</td>;
+                        })}
                     </tr>
                     <tr style={{ background: '#f8fafc' }}>
                         <td style={headerColStyle}>D/E Ratio (Book value)</td>
-                        {deRatio.ratio.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {deRatio.periods.map((_, i) => {
+                            const d = deRatio.debt[i] !== undefined ? deRatio.debt[i] : totalDebt;
+                            const e = deRatio.equity[i];
+                            const r = deRatio.ratio[i] !== undefined && deRatio.ratio[i] !== null 
+                                ? deRatio.ratio[i] 
+                                : (e ? d / e : 0);
+                            return <td key={i} style={tdStyle}>{r ? r.toFixed(2) : '-'}</td>;
+                        })}
                     </tr>
                 </tbody>
             </table>
@@ -161,8 +176,12 @@ const Debt = () => {
                 <YAxis yAxisId="right" tick={{ fontSize: 10 }} orientation="right" domain={[0, 6]} />
                 <Tooltip />
                 <Legend iconType="square" wrapperStyle={{ fontSize: '11px' }} />
-                <Bar yAxisId="left" dataKey="Debt" fill="url(#grad-ff0000)" barSize={20} />
-                <Bar yAxisId="left" dataKey="LiquidAssets" fill="url(#grad-92d050)" barSize={20} name="Liquid Assets" />
+                <Bar yAxisId="left" dataKey="Debt" fill="url(#grad-ff0000)" barSize={20}>
+                  <LabelList dataKey="Debt" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(0)} />
+                </Bar>
+                <Bar yAxisId="left" dataKey="LiquidAssets" fill="url(#grad-92d050)" barSize={20} name="Liquid Assets">
+                  <LabelList dataKey="LiquidAssets" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(0)} />
+                </Bar>
                 <Line yAxisId="right" type="linear" dataKey="Ratio" stroke="#f79646" strokeWidth={2} dot={false} name="Liquid Assets to Debt (no of times) Cost basis">
                   <LabelList dataKey="Ratio" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(2)} />
                 </Line>
@@ -182,8 +201,12 @@ const Debt = () => {
                 <YAxis yAxisId="right" tick={{ fontSize: 10 }} orientation="right" domain={[0, 1.2]} />
                 <Tooltip />
                 <Legend iconType="square" wrapperStyle={{ fontSize: '11px' }} />
-                <Bar yAxisId="left" dataKey="Debt" fill="url(#grad-ff0000)" barSize={20} />
-                <Bar yAxisId="left" dataKey="LiquidAssets" fill="url(#grad-92d050)" barSize={20} name="Liquid Assets" />
+                <Bar yAxisId="left" dataKey="Debt" fill="url(#grad-ff0000)" barSize={20}>
+                  <LabelList dataKey="Debt" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(0)} />
+                </Bar>
+                <Bar yAxisId="left" dataKey="LiquidAssets" fill="url(#grad-92d050)" barSize={20} name="Liquid Assets">
+                  <LabelList dataKey="LiquidAssets" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(0)} />
+                </Bar>
                 <Line yAxisId="right" type="linear" dataKey="Ratio" stroke="#f79646" strokeWidth={2} dot={false} name="Liquid Assets to Debt (no of times) Mkt Values">
                   <LabelList dataKey="Ratio" position="top" fill="#333" fontSize={10} formatter={(val) => val === 0 ? '-' : val.toFixed(2)} />
                 </Line>
@@ -209,27 +232,32 @@ const Debt = () => {
                 <tbody>
                     <tr>
                         <td style={headerColStyle}>Debt</td>
-                        {laCost.debt.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laCost.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laCost.debt[i] !== undefined ? laCost.debt[i] : totalDebt)}</td>)}
                     </tr>
                     <tr>
                         <td style={headerColStyle}>Liquid Assets</td>
-                        {laCost.liquidAssets.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laCost.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laCost.liquidAssets[i] !== undefined ? laCost.liquidAssets[i] : Math.abs(liqReserveValue))}</td>)}
                     </tr>
                     <tr>
                         <td style={{ ...headerColStyle, fontStyle: 'italic', fontWeight: 'normal' }}>Cash at bank</td>
-                        {laCost.cashAtBank.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laCost.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laCost.cashAtBank[i])}</td>)}
                     </tr>
                     <tr>
                         <td style={{ ...headerColStyle, fontStyle: 'italic', fontWeight: 'normal' }}>Investments at Purchase cost (Shares)</td>
-                        {laCost.investmentsShares.map((v, i) => <td key={i} style={{...tdStyle, background: i === 4 ? '#dce6f1' : 'transparent'}}>{fmt(v)}</td>)}
+                        {laCost.periods.map((_, i) => <td key={i} style={{...tdStyle, background: i === laCost.periods.length - 1 ? '#dce6f1' : 'transparent'}}>{fmt(laCost.investmentsShares[i])}</td>)}
                     </tr>
                     <tr>
                         <td style={{ ...headerColStyle, fontStyle: 'italic', fontWeight: 'normal' }}>Investments at Purchase cost (Metal)</td>
-                        {laCost.investmentsMetal.map((v, i) => <td key={i} style={{...tdStyle, background: i === 4 ? '#dce6f1' : 'transparent'}}>{fmt(v)}</td>)}
+                        {laCost.periods.map((_, i) => <td key={i} style={{...tdStyle, background: i === laCost.periods.length - 1 ? '#dce6f1' : 'transparent'}}>{fmt(laCost.investmentsMetal[i])}</td>)}
                     </tr>
                     <tr style={{ background: '#9bc2e6', fontWeight: 'bold' }}>
                         <td style={headerColStyle}>Liquid Assets to Debt (no of times) Cost basis</td>
-                        {laCost.ratio.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laCost.periods.map((_, i) => {
+                            const d = laCost.debt[i] !== undefined ? laCost.debt[i] : totalDebt;
+                            const la = laCost.liquidAssets[i] !== undefined ? laCost.liquidAssets[i] : Math.abs(liqReserveValue);
+                            const r = laCost.ratio[i] !== undefined && laCost.ratio[i] !== null ? laCost.ratio[i] : (d ? la / d : 0);
+                            return <td key={i} style={tdStyle}>{r ? r.toFixed(2) : '-'}</td>;
+                        })}
                     </tr>
                 </tbody>
             </table>
@@ -249,27 +277,32 @@ const Debt = () => {
                 <tbody>
                     <tr>
                         <td style={headerColStyle}>Debt</td>
-                        {laMkt.debt.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laMkt.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laMkt.debt[i] !== undefined ? laMkt.debt[i] : totalDebt)}</td>)}
                     </tr>
                     <tr>
                         <td style={headerColStyle}>Liquid Assets</td>
-                        {laMkt.liquidAssets.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laMkt.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laMkt.liquidAssets[i] !== undefined ? laMkt.liquidAssets[i] : Math.abs(liqReserveValue))}</td>)}
                     </tr>
                     <tr>
                         <td style={{ ...headerColStyle, fontStyle: 'italic', fontWeight: 'normal' }}>Cash at bank</td>
-                        {laMkt.cashAtBank.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laMkt.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laMkt.cashAtBank[i])}</td>)}
                     </tr>
                     <tr>
                         <td style={{ ...headerColStyle, fontStyle: 'italic', fontWeight: 'normal' }}>Market Value of Investments (Shares)</td>
-                        {laMkt.investmentsShares.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laMkt.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laMkt.investmentsShares[i])}</td>)}
                     </tr>
                     <tr>
                         <td style={{ ...headerColStyle, fontStyle: 'italic', fontWeight: 'normal' }}>Market Value of Investments (Metal)</td>
-                        {laMkt.investmentsMetal.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laMkt.periods.map((_, i) => <td key={i} style={tdStyle}>{fmt(laMkt.investmentsMetal[i])}</td>)}
                     </tr>
                     <tr style={{ background: '#9bc2e6', fontWeight: 'bold' }}>
                         <td style={headerColStyle}>Liquid Assets to Debt (no of times) Mkt Values</td>
-                        {laMkt.ratio.map((v, i) => <td key={i} style={tdStyle}>{fmt(v)}</td>)}
+                        {laMkt.periods.map((_, i) => {
+                            const d = laMkt.debt[i] !== undefined ? laMkt.debt[i] : totalDebt;
+                            const la = laMkt.liquidAssets[i] !== undefined ? laMkt.liquidAssets[i] : Math.abs(liqReserveValue);
+                            const r = laMkt.ratio[i] !== undefined && laMkt.ratio[i] !== null ? laMkt.ratio[i] : (d ? la / d : 0);
+                            return <td key={i} style={tdStyle}>{r ? r.toFixed(2) : '-'}</td>;
+                        })}
                     </tr>
                 </tbody>
             </table>

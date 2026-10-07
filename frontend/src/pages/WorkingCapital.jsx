@@ -9,53 +9,80 @@ const WorkingCapital = () => {
   if (globalLoading) return <div className="empty animate-pulse-dot">Loading Working Capital Data...</div>;
   if (globalError || !globalData) return <div className="empty text-danger">Failed to load working capital data.</div>;
 
-  const facilities = globalData.wc.facilities;
+  const banksRaw = globalData.wc.banks || [];
 
-  const totalSanctioned = facilities.reduce((sum, f) => sum + (f.SanctionedLimit || 0), 0);
-  const totalUtilized = facilities.reduce((sum, f) => sum + (f.UtilizedAmount || 0), 0);
+  const totalSanctioned = banksRaw.reduce((sum, b) => sum + (b.totalLimit || 0), 0);
+  const totalUtilized = banksRaw.reduce((sum, b) => sum + (b.utilized || 0), 0);
   const avgUtilPct = totalSanctioned > 0 ? (totalUtilized / totalSanctioned) * 100 : 0;
 
   // Transform Data for Charts & Pivot
   const banks = {};
   const regions = {};
-  const facilityTypesSet = new Set();
   
-  facilities.forEach(f => {
-    // Map long names to shorter names for charts
-    let fType = f.FacilityTypeName;
-    if (fType.includes("Bonds")) fType = "Bonds & G";
-    if (fType.includes("Letter of Credit")) fType = "LC";
+  banksRaw.forEach(b => {
+    const bName = b.bank;
+    
+    if (!banks[bName]) {
+      banks[bName] = { 
+        name: bName, 
+        data: {
+          'LC': { Sanctioned: b.lcLimit, Utilised: b.lcLimit > 0 ? (b.utilized * (b.lcLimit / b.totalLimit)) : 0 },
+          'Murabaha': { Sanctioned: b.murabahaLimit, Utilised: b.murabahaLimit > 0 ? (b.utilized * (b.murabahaLimit / b.totalLimit)) : 0 },
+          'Bonds & G': { Sanctioned: b.bondsLimit, Utilised: b.bondsLimit > 0 ? (b.utilized * (b.bondsLimit / b.totalLimit)) : 0 }
+        }
+      };
+    }
 
-    // Bank-wise
-    if (!banks[f.BankName]) banks[f.BankName] = { name: f.BankName, data: {} };
-    if (!banks[f.BankName].data[fType]) banks[f.BankName].data[fType] = { Sanctioned: 0, Utilised: 0 };
+    // Default all to Qatar since region isn't in this sheet
+    const regionName = 'Qatar';
+    if (!regions[regionName]) {
+      regions[regionName] = {
+        name: regionName,
+        data: {
+          'LC': { Sanctioned: 0, Utilised: 0 },
+          'Murabaha': { Sanctioned: 0, Utilised: 0 },
+          'Bonds & G': { Sanctioned: 0, Utilised: 0 }
+        }
+      };
+    }
     
-    // Region-wise
-    const regionName = f.Region || 'Unknown';
-    if (!regions[regionName]) regions[regionName] = { name: regionName, data: {} };
-    if (!regions[regionName].data[fType]) regions[regionName].data[fType] = { Sanctioned: 0, Utilised: 0 };
-    
-    facilityTypesSet.add(fType);
-    
-    // Fallback: If SanctionedLimit is 0 in the local DB, derive it from Utilized + Available
-    const actualSanctioned = f.SanctionedLimit || ((f.UtilizedAmount || 0) + (f.AvailableAmount || 0)) || 0;
-    
-    banks[f.BankName].data[fType].Sanctioned += actualSanctioned;
-    banks[f.BankName].data[fType].Utilised += (f.UtilizedAmount || 0);
+    regions[regionName].data['LC'].Sanctioned += b.lcLimit;
+    regions[regionName].data['Murabaha'].Sanctioned += b.murabahaLimit;
+    regions[regionName].data['Bonds & G'].Sanctioned += b.bondsLimit;
 
-    regions[regionName].data[fType].Sanctioned += actualSanctioned;
-    regions[regionName].data[fType].Utilised += (f.UtilizedAmount || 0);
+    if (b.totalLimit > 0) {
+      regions[regionName].data['LC'].Utilised += b.utilized * (b.lcLimit / b.totalLimit);
+      regions[regionName].data['Murabaha'].Utilised += b.utilized * (b.murabahaLimit / b.totalLimit);
+      regions[regionName].data['Bonds & G'].Utilised += b.utilized * (b.bondsLimit / b.totalLimit);
+    }
   });
 
-  // Force all 3 types to appear on the X-axis even if the DB data doesn't have them
-  const orderedTypes = ['LC', 'Murabaha', 'Bonds & G'];
-  orderedTypes.forEach(t => facilityTypesSet.add(t));
-  
-  const facilityTypeArray = Array.from(facilityTypesSet).sort((a, b) => {
-    const ia = orderedTypes.indexOf(a);
-    const ib = orderedTypes.indexOf(b);
-    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-  });
+  if (globalData.wc.regionWise && globalData.wc.regionWise.length > 0) {
+    // Clear out the dummy fallback Qatar we just built
+    for (const key in regions) {
+      delete regions[key];
+    }
+    globalData.wc.regionWise.forEach(r => {
+      if (r.region === 'Total' || r.facility === 'Total') return;
+      const rName = r.region === 'U.A.E' ? 'Dubai' : r.region;
+      if (!regions[rName]) {
+        regions[rName] = {
+          name: rName,
+          data: {
+            'LC': { Sanctioned: 0, Utilised: 0 },
+            'Murabaha': { Sanctioned: 0, Utilised: 0 },
+            'Bonds & G': { Sanctioned: 0, Utilised: 0 }
+          }
+        };
+      }
+      if (regions[rName].data[r.facility]) {
+        regions[rName].data[r.facility].Sanctioned = r.sanctioned;
+        regions[rName].data[r.facility].Utilised = r.utilised;
+      }
+    });
+  }
+
+  const facilityTypeArray = ['LC', 'Murabaha', 'Bonds & G'];
 
   // --- BANK WISE DATA ---
   const chartDataGroups = Object.values(banks).map(bank => {
@@ -245,34 +272,38 @@ const WorkingCapital = () => {
                   <thead>
                     <tr>
                       <th style={{ width: '20%', padding: '8px 4px', background: '#0070c0', color: 'white', overflowWrap: 'break-word' }}>Bank</th>
-                      <th style={{ width: '22%', padding: '8px 4px', background: '#0070c0', color: 'white', overflowWrap: 'break-word' }}>Type</th>
-                      <th className="num" style={{ width: '12%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Limit</th>
-                      <th className="num" style={{ width: '12%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Util.</th>
-                      <th className="num" style={{ width: '14%', padding: '8px 15px 8px 4px', background: '#0070c0', color: 'white' }}>Avail.</th>
-                      <th style={{ width: '20%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Util %</th>
+                      <th className="num" style={{ width: '13%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>LC Limit</th>
+                      <th className="num" style={{ width: '13%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Murabaha</th>
+                      <th className="num" style={{ width: '13%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Bonds</th>
+                      <th className="num" style={{ width: '13%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Total Limit</th>
+                      <th className="num" style={{ width: '13%', padding: '8px 15px 8px 4px', background: '#0070c0', color: 'white' }}>Utilized</th>
+                      <th style={{ width: '15%', padding: '8px 4px', background: '#0070c0', color: 'white' }}>Util %</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {facilities.length === 0 ? (
-                      <tr><td colSpan="6" className="empty" style={{ padding: '8px 4px' }}>No facilities found.</td></tr>
+                    {banksRaw.length === 0 ? (
+                      <tr><td colSpan="7" className="empty" style={{ padding: '8px 4px' }}>No facilities found.</td></tr>
                     ) : (
-                      facilities.map((f, idx) => (
+                      banksRaw.map((b, idx) => {
+                        const pct = b.totalLimit > 0 ? (b.utilized / b.totalLimit) * 100 : 0;
+                        return (
                         <tr key={idx} style={{ padding: '0' }}>
-                          <td style={{ padding: '8px 4px', overflowWrap: 'break-word' }}><span style={{ fontWeight: '600' }}>{f.BankName}</span></td>
-                          <td style={{ padding: '8px 4px', overflowWrap: 'break-word' }}>{f.FacilityTypeName}</td>
-                          <td className="num" style={{ padding: '8px 4px' }}><strong>{f.SanctionedLimit?.toFixed(0)}</strong></td>
-                          <td className="num" style={{ padding: '8px 4px' }}>{f.UtilizedAmount?.toFixed(0)}</td>
-                          <td className="num text-success" style={{ padding: '8px 15px 8px 4px' }}>{f.AvailableAmount?.toFixed(0)}</td>
+                          <td style={{ padding: '8px 4px', overflowWrap: 'break-word' }}><span style={{ fontWeight: '600' }}>{b.bank}</span></td>
+                          <td className="num" style={{ padding: '8px 4px' }}>{b.lcLimit?.toFixed(0)}</td>
+                          <td className="num" style={{ padding: '8px 4px' }}>{b.murabahaLimit?.toFixed(0)}</td>
+                          <td className="num" style={{ padding: '8px 4px' }}>{b.bondsLimit?.toFixed(0)}</td>
+                          <td className="num" style={{ padding: '8px 4px' }}><strong>{b.totalLimit?.toFixed(0)}</strong></td>
+                          <td className="num text-success" style={{ padding: '8px 15px 8px 4px' }}>{b.utilized?.toFixed(0)}</td>
                           <td style={{ padding: '8px 4px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <div className="progress" style={{ flex: 1, height: '4px', minWidth: '15px' }}>
-                                <span style={{ width: `${f.UtilizationPct}%`, background: f.UtilizationPct > 80 ? 'var(--danger)' : 'var(--blue)' }}></span>
+                                <span style={{ width: `${Math.min(pct, 100)}%`, background: pct > 80 ? 'var(--danger)' : 'var(--blue)' }}></span>
                               </div>
-                              <span style={{ fontSize: '9px', minWidth: '24px', textAlign: 'right' }}>{f.UtilizationPct?.toFixed(0)}%</span>
+                              <span style={{ fontSize: '9px', minWidth: '24px', textAlign: 'right' }}>{pct?.toFixed(0)}%</span>
                             </div>
                           </td>
                         </tr>
-                      ))
+                      )})
                     )}
                   </tbody>
                 </table>

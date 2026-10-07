@@ -157,6 +157,85 @@ app.get('/api/workingcapital', async (req, res) => {
     }
 });
 
+app.get('/api/workingcapital/excel', (req, res) => {
+    try {
+        const filePath = getLatestExcelFile();
+        const workbook = xlsx.readFile(filePath);
+        let sheetName = '3. Working capital';
+        if (!workbook.SheetNames.includes(sheetName)) sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json(worksheet, { header: 1, raw: false });
+
+        const banks = [];
+        // Data usually starts around row 10 or 11. Find "Sanctioned Limit" and go below it.
+        let startRow = 0;
+        for (let i = 0; i < data.length; i++) {
+            if (data[i] && String(data[i][1]).includes('Sanctioned Limit')) {
+                startRow = i + 1;
+                break;
+            }
+        }
+
+        if (startRow > 0) {
+            for (let i = startRow; i < data.length; i++) {
+                const row = data[i];
+                if (!row) continue;
+                const bankName = String(row[1] || '').trim();
+                if (bankName.toLowerCase().includes('working capital limit')) break;
+                if (!bankName || bankName === 'Total' || bankName === 'Bank' || bankName.includes('limits')) continue;
+
+                banks.push({
+                    bank: bankName,
+                    lcLimit: parseFloat(row[2]) || 0,
+                    murabahaLimit: parseFloat(row[3]) || 0,
+                    bondsLimit: parseFloat(row[4]) || 0,
+                    totalLimit: parseFloat(row[5]) || 0,
+                    utilized: parseFloat(row[6]) || 0
+                });
+            }
+        }
+        const regionWise = [];
+        const countryWise = [];
+        let currentRegion = null;
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row) continue;
+            
+            // Detect Region
+            if (row[2] && String(row[2]).trim() === 'Sanctioned' && row[3] && String(row[3]).trim() === 'Utilised') {
+                currentRegion = String(row[1] || '').trim();
+                continue;
+            }
+            if (currentRegion && row[1] && ['LC', 'Murabaha', 'Bonds & Guarantee', 'Total'].includes(String(row[1]).trim())) {
+                regionWise.push({
+                    region: currentRegion,
+                    facility: String(row[1]).trim() === 'Bonds & Guarantee' ? 'Bonds & G' : String(row[1]).trim(),
+                    sanctioned: parseFloat(row[2]) || 0,
+                    utilised: parseFloat(row[3]) || 0
+                });
+            }
+            
+            // Detect Country Wise
+            if (row[1] && String(row[1]).trim() === 'Bank' && row[2] && String(row[2]).trim() === 'LC') {
+                for (let j = i + 1; j <= i + 4; j++) {
+                    if (data[j] && data[j][1]) {
+                        countryWise.push({
+                            country: String(data[j][1]).trim(),
+                            lc: parseFloat(data[j][2]) || 0,
+                            murabaha: parseFloat(data[j][3]) || 0,
+                            bg: parseFloat(data[j][4]) || 0
+                        });
+                    }
+                }
+            }
+        }
+        res.json({ banks, regionWise, countryWise });
+    } catch (err) {
+        console.error("WC excel error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.get('/api/loans', async (req, res) => {
     try {
         const pool = await poolPromise;
@@ -307,7 +386,16 @@ app.get('/api/loans/excel', (req, res) => {
             });
         }
 
-        res.json({ shortTerm, longTerm });
+        const quarterlySchedule = [];
+        for (let i = 32; i <= 45; i++) {
+            if (data[i] && data[i][0]) {
+                quarterlySchedule.push({
+                    name: data[i][0],
+                    value: parseFloat(data[i][1]) || 0
+                });
+            }
+        }
+        res.json({ shortTerm, longTerm, quarterlySchedule });
     } catch (err) {
         res.status(500).send(err.message);
     }

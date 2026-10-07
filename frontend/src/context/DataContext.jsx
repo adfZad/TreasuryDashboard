@@ -18,7 +18,7 @@ export const DataProvider = ({ children }) => {
             axios.get('/api/dashboard'),
             axios.get('/api/funds'),
             axios.get('/api/cashflow'),
-            axios.get('/api/workingcapital'),
+            axios.get('/api/workingcapital/excel').catch(() => ({ data: { banks: [] } })),
             axios.get('/api/loans'),
             axios.get('/api/debt'),
             axios.get('/api/movement'),
@@ -38,7 +38,9 @@ export const DataProvider = ({ children }) => {
                     comment: responses[7].data.comment || ''
                 },
                 wc: {
-                    facilities: responses[3].data.facilities || []
+                    banks: responses[3].data.banks || [],
+                    regionWise: responses[3].data.regionWise || [],
+                    countryWise: responses[3].data.countryWise || []
                 },
                 loans: {
                     loans: responses[4].data.loans || [],

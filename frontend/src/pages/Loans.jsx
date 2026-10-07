@@ -32,15 +32,22 @@ const Loans = () => {
   const ltTotalOutstanding = ltDataCharts.reduce((sum, d) => sum + (d.amount || 0), 0); // or use balance
   const ltTotalObj = ltDataFull.find(d => d.bank && d.bank.indexOf('Total including') > -1) || ltDataFull.find(d => d.bank === 'Total') || {};
 
-  // Construct schedule chart data
-  const ltScheduleData = [
-    { name: '2026', value: Number(ltDataCharts.reduce((s, d) => s + (d.y2026 || 0), 0).toFixed(1)) },
-    { name: '2027', value: Number(ltDataCharts.reduce((s, d) => s + (d.y2027 || 0), 0).toFixed(1)) },
-    { name: '2028', value: Number(ltDataCharts.reduce((s, d) => s + (d.y2028 || 0), 0).toFixed(1)) },
-    { name: '2029', value: Number(ltDataCharts.reduce((s, d) => s + (d.y2029 || 0), 0).toFixed(1)) },
-    { name: '2030', value: Number(ltDataCharts.reduce((s, d) => s + (d.y2030 || 0), 0).toFixed(1)) },
-    { name: '2031', value: Number(ltDataCharts.reduce((s, d) => s + (d.y2031 || 0), 0).toFixed(1)) },
-  ];
+  // Construct schedule chart data (Quarterly basis)
+  let ltScheduleData = [];
+  if (excelData.quarterlySchedule && excelData.quarterlySchedule.length > 0) {
+    // Only include items starting from Q3-2026 (remaining) to match user preference
+    const startIndex = excelData.quarterlySchedule.findIndex(q => q.name.includes('remaining') || q.name === 'Q3-2026');
+    ltScheduleData = excelData.quarterlySchedule.slice(startIndex > -1 ? startIndex : 0);
+  } else {
+    ltScheduleData = [
+      { name: '2026', value: Number((ltDataCharts.reduce((s, d) => s + (d.y2026 || 0), 0) / 4).toFixed(1)) },
+      { name: '2027', value: Number((ltDataCharts.reduce((s, d) => s + (d.y2027 || 0), 0) / 4).toFixed(1)) },
+      { name: '2028', value: Number((ltDataCharts.reduce((s, d) => s + (d.y2028 || 0), 0) / 4).toFixed(1)) },
+      { name: '2029', value: Number((ltDataCharts.reduce((s, d) => s + (d.y2029 || 0), 0) / 4).toFixed(1)) },
+      { name: '2030', value: Number((ltDataCharts.reduce((s, d) => s + (d.y2030 || 0), 0) / 4).toFixed(1)) },
+      { name: '2031', value: Number((ltDataCharts.reduce((s, d) => s + (d.y2031 || 0), 0) / 4).toFixed(1)) },
+    ];
+  }
 
   return (
     <div>
@@ -149,7 +156,7 @@ const Loans = () => {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={ltScheduleData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 11}} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 11}} padding={{ left: 50, right: 50 }} />
                   <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11}} />
                   <Tooltip />
                   <Line type="linear" dataKey="value" stroke="#f79646" strokeWidth={3} dot={false} activeDot={{ r: 6 }}>
@@ -178,7 +185,8 @@ const Loans = () => {
                   <th style={{ background: '#9bc2e6', color: 'black' }}>Tenure</th>
                   <th style={{ background: '#9bc2e6', color: 'black' }}>Start date</th>
                   <th style={{ background: '#9bc2e6', color: 'black' }}>End date</th>
-                  <th style={{ background: '#9bc2e6', color: 'black', borderRight: '1px solid white' }}>Installment frequency</th>
+                  <th style={{ background: '#9bc2e6', color: 'black' }}>Installment frequency</th>
+                  <th style={{ background: '#9bc2e6', color: 'black', borderRight: '1px solid white' }}>Installment amount</th>
                   <th style={{ background: '#9bc2e6', color: 'black' }}>2026</th>
                   <th style={{ background: '#9bc2e6', color: 'black' }}>2027</th>
                   <th style={{ background: '#9bc2e6', color: 'black' }}>2028</th>
@@ -190,7 +198,20 @@ const Loans = () => {
                 </tr>
               </thead>
               <tbody>
-                {ltDataFull.map((r, i) => (
+                {ltDataFull.map((r, i) => {
+                  let instAmt = '-';
+                  if (r.freq && !r.bank?.includes('Total')) {
+                    const yearly = r.y2027 || r.y2028 || r.y2029 || r.y2030 || r.y2026 || 0;
+                    const fLower = String(r.freq).toLowerCase();
+                    let div = 1;
+                    if (fLower.includes('quarter')) div = 4;
+                    else if (fLower.includes('month')) div = 12;
+                    else if (fLower.includes('semi') || fLower.includes('half')) div = 2;
+                    instAmt = (yearly / div).toFixed(2);
+                    if (instAmt == 0) instAmt = '-';
+                  }
+                  
+                  return (
                   <tr key={i} style={{ 
                     background: r.bank?.indexOf('Total') > -1 ? '#e7e6e6' : 'transparent',
                     fontWeight: r.bank?.indexOf('Total') > -1 ? 'bold' : 'normal',
@@ -203,6 +224,7 @@ const Loans = () => {
                     <td>{r.start || '-'}</td>
                     <td>{r.end || '-'}</td>
                     <td>{r.freq || '-'}</td>
+                    <td style={{ borderRight: '1px solid #ddd' }}>{instAmt}</td>
                     <td style={{ background: '#dce6f1' }}>{r.paid2025 ? r.paid2025.toFixed(1) : '-'}</td>
                     <td style={{ background: '#dce6f1' }}>{r.paid2026 ? r.paid2026.toFixed(1) : '-'}</td>
                     <td style={{ background: '#dce6f1' }}>{r.balance ? r.balance.toFixed(1) : '-'}</td>
@@ -215,7 +237,8 @@ const Loans = () => {
                     <td>{r.y2032 ? r.y2032.toFixed(1) : '-'}</td>
                     <td>{r.y2035_2038 ? r.y2035_2038.toFixed(1) : '-'}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
