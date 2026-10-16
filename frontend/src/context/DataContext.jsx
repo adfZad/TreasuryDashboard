@@ -39,6 +39,7 @@ export const DataProvider = ({ children }) => {
                 },
                 wc: {
                     banks: responses[3].data.banks || [],
+                    bankWise: responses[3].data.bankWise || [],
                     regionWise: responses[3].data.regionWise || [],
                     countryWise: responses[3].data.countryWise || []
                 },

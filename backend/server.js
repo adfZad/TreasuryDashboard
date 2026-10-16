@@ -194,42 +194,92 @@ app.get('/api/workingcapital/excel', (req, res) => {
                 });
             }
         }
+        const bankWise = [];
         const regionWise = [];
         const countryWise = [];
-        let currentRegion = null;
+        let section = null;
+        let currentEntity = null;
+
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             if (!row) continue;
-            
-            // Detect Region
-            if (row[2] && String(row[2]).trim() === 'Sanctioned' && row[3] && String(row[3]).trim() === 'Utilised') {
-                currentRegion = String(row[1] || '').trim();
+
+            const col0 = String(row[0] || '').trim();
+            const col1 = String(row[1] || '').trim();
+            const col2 = String(row[2] || '').trim();
+            const col3 = String(row[3] || '').trim();
+
+            if (col1.includes('Working Capital Limits - Bank Wise') && !col2.includes('Summary')) {
+                section = 'bankWise';
+                currentEntity = null;
                 continue;
             }
-            if (currentRegion && row[1] && ['LC', 'Murabaha', 'Bonds & Guarantee', 'Total'].includes(String(row[1]).trim())) {
-                regionWise.push({
-                    region: currentRegion,
-                    facility: String(row[1]).trim() === 'Bonds & Guarantee' ? 'Bonds & G' : String(row[1]).trim(),
-                    sanctioned: parseFloat(row[2]) || 0,
-                    utilised: parseFloat(row[3]) || 0
-                });
+            if (col1.includes('WC Limits - Bank Wise')) {
+                section = 'bankPivot';
+                currentEntity = null;
+                continue;
             }
-            
-            // Detect Country Wise
-            if (row[1] && String(row[1]).trim() === 'Bank' && row[2] && String(row[2]).trim() === 'LC') {
-                for (let j = i + 1; j <= i + 4; j++) {
+            if (col1.includes('REGION WISE FACILITY UTILISATION SUMMARY')) {
+                section = 'regionWise';
+                currentEntity = null;
+                continue;
+            }
+            if (col1.includes('Country Wise WC Utilisation')) {
+                for (let j = i + 2; j <= i + 6 && j < data.length; j++) {
                     if (data[j] && data[j][1]) {
+                        const cName = String(data[j][1]).trim();
+                        if (cName === 'Total') break;
                         countryWise.push({
-                            country: String(data[j][1]).trim(),
+                            country: cName,
                             lc: parseFloat(data[j][2]) || 0,
                             murabaha: parseFloat(data[j][3]) || 0,
                             bg: parseFloat(data[j][4]) || 0
                         });
                     }
                 }
+                section = 'countryWise';
+                currentEntity = null;
+                continue;
+            }
+            if (col1.includes('WC Limits Utilisation - Country Wise')) {
+                section = 'countryWise';
+                currentEntity = null;
+                continue;
+            }
+
+            if (section === 'bankWise') {
+                if (col2 === 'Sanctioned' && col3 === 'Utilised') {
+                    currentEntity = col1;
+                    continue;
+                }
+                if (currentEntity && ['LC', 'Murabaha', 'Bonds & Guarantees', 'Bonds & Guarantee', 'Total Limit', 'Total'].includes(col1)) {
+                    const fac = (col1 === 'Bonds & Guarantees' || col1 === 'Bonds & Guarantee') ? 'Bonds & G'
+                              : (col1 === 'Total' ? 'Total Limit' : col1);
+                    bankWise.push({
+                        bank: currentEntity,
+                        facility: fac,
+                        sanctioned: parseFloat(row[2]) || 0,
+                        utilised: parseFloat(row[3]) || 0
+                    });
+                }
+            } else if (section === 'regionWise') {
+                if (col2 === 'Sanctioned' && col3 === 'Utilised') {
+                    currentEntity = col1;
+                    continue;
+                }
+                if (currentEntity && ['LC', 'Murabaha', 'Bonds & Guarantees', 'Bonds & Guarantee', 'Total Limit', 'Total'].includes(col1)) {
+                    const fac = (col1 === 'Bonds & Guarantees' || col1 === 'Bonds & Guarantee') ? 'Bonds & G'
+                              : (col1 === 'Total Limit' ? 'Total' : col1);
+                    regionWise.push({
+                        region: currentEntity,
+                        facility: fac,
+                        sanctioned: parseFloat(row[2]) || 0,
+                        utilised: parseFloat(row[3]) || 0
+                    });
+                }
             }
         }
-        res.json({ banks, regionWise, countryWise });
+        res.json({ banks, bankWise, regionWise, countryWise });
     } catch (err) {
         console.error("WC excel error:", err);
         res.status(500).json({ error: err.message });

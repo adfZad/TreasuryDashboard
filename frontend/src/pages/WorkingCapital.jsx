@@ -28,7 +28,8 @@ const WorkingCapital = () => {
         data: {
           'LC': { Sanctioned: b.lcLimit, Utilised: b.lcLimit > 0 ? (b.utilized * (b.lcLimit / b.totalLimit)) : 0 },
           'Murabaha': { Sanctioned: b.murabahaLimit, Utilised: b.murabahaLimit > 0 ? (b.utilized * (b.murabahaLimit / b.totalLimit)) : 0 },
-          'Bonds & G': { Sanctioned: b.bondsLimit, Utilised: b.bondsLimit > 0 ? (b.utilized * (b.bondsLimit / b.totalLimit)) : 0 }
+          'Bonds & G': { Sanctioned: b.bondsLimit, Utilised: b.bondsLimit > 0 ? (b.utilized * (b.bondsLimit / b.totalLimit)) : 0 },
+          'Total Limit': { Sanctioned: b.totalLimit || 0, Utilised: b.utilized || 0 }
         }
       };
     }
@@ -41,7 +42,8 @@ const WorkingCapital = () => {
         data: {
           'LC': { Sanctioned: 0, Utilised: 0 },
           'Murabaha': { Sanctioned: 0, Utilised: 0 },
-          'Bonds & G': { Sanctioned: 0, Utilised: 0 }
+          'Bonds & G': { Sanctioned: 0, Utilised: 0 },
+          'Total': { Sanctioned: 0, Utilised: 0 }
         }
       };
     }
@@ -49,13 +51,39 @@ const WorkingCapital = () => {
     regions[regionName].data['LC'].Sanctioned += b.lcLimit;
     regions[regionName].data['Murabaha'].Sanctioned += b.murabahaLimit;
     regions[regionName].data['Bonds & G'].Sanctioned += b.bondsLimit;
+    regions[regionName].data['Total'].Sanctioned += b.totalLimit || 0;
 
     if (b.totalLimit > 0) {
       regions[regionName].data['LC'].Utilised += b.utilized * (b.lcLimit / b.totalLimit);
       regions[regionName].data['Murabaha'].Utilised += b.utilized * (b.murabahaLimit / b.totalLimit);
       regions[regionName].data['Bonds & G'].Utilised += b.utilized * (b.bondsLimit / b.totalLimit);
+      regions[regionName].data['Total'].Utilised += b.utilized || 0;
     }
   });
+
+  if (globalData.wc.bankWise && globalData.wc.bankWise.length > 0) {
+    for (const key in banks) {
+      delete banks[key];
+    }
+    globalData.wc.bankWise.forEach(b => {
+      if (b.bank === 'Total') return;
+      if (!banks[b.bank]) {
+        banks[b.bank] = {
+          name: b.bank,
+          data: {
+            'LC': { Sanctioned: 0, Utilised: 0 },
+            'Murabaha': { Sanctioned: 0, Utilised: 0 },
+            'Bonds & G': { Sanctioned: 0, Utilised: 0 },
+            'Total Limit': { Sanctioned: 0, Utilised: 0 }
+          }
+        };
+      }
+      if (banks[b.bank].data[b.facility]) {
+        banks[b.bank].data[b.facility].Sanctioned = b.sanctioned;
+        banks[b.bank].data[b.facility].Utilised = b.utilised;
+      }
+    });
+  }
 
   if (globalData.wc.regionWise && globalData.wc.regionWise.length > 0) {
     // Clear out the dummy fallback Qatar we just built
@@ -63,15 +91,16 @@ const WorkingCapital = () => {
       delete regions[key];
     }
     globalData.wc.regionWise.forEach(r => {
-      if (r.region === 'Total' || r.facility === 'Total') return;
-      const rName = r.region === 'U.A.E' ? 'Dubai' : r.region;
+      if (r.region === 'Total') return;
+      const rName = r.region;
       if (!regions[rName]) {
         regions[rName] = {
           name: rName,
           data: {
             'LC': { Sanctioned: 0, Utilised: 0 },
             'Murabaha': { Sanctioned: 0, Utilised: 0 },
-            'Bonds & G': { Sanctioned: 0, Utilised: 0 }
+            'Bonds & G': { Sanctioned: 0, Utilised: 0 },
+            'Total': { Sanctioned: 0, Utilised: 0 }
           }
         };
       }
@@ -92,8 +121,9 @@ const WorkingCapital = () => {
       Utilised: bank.data[type]?.Utilised || 0
     }));
     
-    const totalSanctionedBank = chartData.reduce((sum, d) => sum + d.Sanctioned, 0);
-    const totalUtilisedBank = chartData.reduce((sum, d) => sum + d.Utilised, 0);
+    const hasExactTotal = bank.data['Total Limit'] && (bank.data['Total Limit'].Sanctioned > 0 || bank.data['Total Limit'].Utilised > 0);
+    const totalSanctionedBank = hasExactTotal ? bank.data['Total Limit'].Sanctioned : chartData.reduce((sum, d) => sum + d.Sanctioned, 0);
+    const totalUtilisedBank = hasExactTotal ? bank.data['Total Limit'].Utilised : chartData.reduce((sum, d) => sum + d.Utilised, 0);
     
     chartData.push({
       name: 'Total Limit',
@@ -114,8 +144,8 @@ const WorkingCapital = () => {
     return { name: type, Sanctioned: typeSanctioned, Utilised: typeUtilised };
   });
   
-  const overallSanctioned = totalChartData.reduce((sum, d) => sum + d.Sanctioned, 0);
-  const overallUtilised = totalChartData.reduce((sum, d) => sum + d.Utilised, 0);
+  const overallSanctioned = Object.values(banks).reduce((sum, b) => sum + (b.data['Total Limit']?.Sanctioned || 0), 0) || totalChartData.reduce((sum, d) => sum + d.Sanctioned, 0);
+  const overallUtilised = Object.values(banks).reduce((sum, b) => sum + (b.data['Total Limit']?.Utilised || 0), 0) || totalChartData.reduce((sum, d) => sum + d.Utilised, 0);
   
   totalChartData.push({
     name: 'Total Limit',
@@ -140,25 +170,50 @@ const WorkingCapital = () => {
   });
 
   // --- REGION WISE DATA ---
-  const regionChartDataGroups = Object.values(regions).map(region => {
+  // Order regions as Qatar, U.A.E, Switzerland to match Excel reference
+  const orderedRegions = Object.values(regions).sort((a, b) => {
+    const order = { 'Qatar': 1, 'U.A.E': 2, 'Dubai': 2, 'Switzerland': 3 };
+    return (order[a.name] || 99) - (order[b.name] || 99);
+  });
+
+  const regionChartDataGroups = orderedRegions.map(region => {
     const chartData = facilityTypeArray.map(type => ({
       name: type,
       Sanctioned: region.data[type]?.Sanctioned || 0,
       Utilised: region.data[type]?.Utilised || 0
     }));
-    const totalS = chartData.reduce((sum, d) => sum + d.Sanctioned, 0);
-    const totalU = chartData.reduce((sum, d) => sum + d.Utilised, 0);
-    chartData.push({ name: 'Total Limit', Sanctioned: totalS, Utilised: totalU });
+    const hasExactTotal = region.data['Total'] && (region.data['Total'].Sanctioned > 0 || region.data['Total'].Utilised > 0);
+    const totalS = hasExactTotal ? region.data['Total'].Sanctioned : chartData.reduce((sum, d) => sum + d.Sanctioned, 0);
+    const totalU = hasExactTotal ? region.data['Total'].Utilised : chartData.reduce((sum, d) => sum + d.Utilised, 0);
+    chartData.push({ name: 'Total', Sanctioned: totalS, Utilised: totalU });
     return { regionName: region.name, data: chartData };
   });
 
-  const regionPivotData = Object.values(regions).map(region => {
-    const row = { region: region.name };
-    facilityTypeArray.forEach(type => {
-      row[type] = region.data[type]?.Utilised || 0;
-    });
-    return row;
-  });
+  const regionPivotTotals = {};
+  facilityTypeArray.forEach(t => regionPivotTotals[t] = 0);
+
+  const regionPivotData = (globalData.wc.countryWise && globalData.wc.countryWise.length > 0)
+    ? globalData.wc.countryWise.map(c => {
+        const row = {
+          region: c.country,
+          'LC': c.lc || 0,
+          'Murabaha': c.murabaha || 0,
+          'Bonds & G': c.bg || 0
+        };
+        regionPivotTotals['LC'] += row['LC'];
+        regionPivotTotals['Murabaha'] += row['Murabaha'];
+        regionPivotTotals['Bonds & G'] += row['Bonds & G'];
+        return row;
+      })
+    : orderedRegions.map(region => {
+        const row = { region: region.name };
+        facilityTypeArray.forEach(type => {
+          const val = region.data[type]?.Utilised || 0;
+          row[type] = val;
+          regionPivotTotals[type] += val;
+        });
+        return row;
+      });
 
   const COLORS = ['#3479bd', '#d94b4b', '#7cb342', '#fbc02d', '#8e24aa'];
 
@@ -343,16 +398,25 @@ const WorkingCapital = () => {
 
           {/* Middle: Region Pie Charts */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
-            {facilityTypeArray.map((fType, pIdx) => {
+            {['Murabaha', 'LC', 'Bonds & G'].map((fType, pIdx) => {
               // Build pie data
-              const pieData = Object.values(regions).map(region => ({
-                name: region.name,
+              const pieData = orderedRegions.map(region => ({
+                name: region.name === 'U.A.E' ? 'Dubai' : region.name,
                 value: region.data[fType]?.Utilised || 0
               })).filter(d => d.value > 0);
 
+              const regionColorMap = {
+                'Qatar': '#3479bd',
+                'Dubai': '#d94b4b',
+                'U.A.E': '#d94b4b',
+                'Switzerland': '#7cb342'
+              };
+
               return (
                 <div key={pIdx} className="card" style={{ padding: '15px' }}>
-                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: '700', textAlign: 'center' }}>{fType}</h4>
+                  <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', fontWeight: '700', textAlign: 'center' }}>
+                    {fType === 'Bonds & G' ? 'B&G' : fType}
+                  </h4>
                   <div style={{ width: '100%', height: 180 }}>
                     {pieData.length === 0 ? (
                       <div className="empty" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>No Utilisation</div>
@@ -364,18 +428,18 @@ const WorkingCapital = () => {
                             cx="50%"
                             cy="50%"
                             labelLine={true}
-                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                            label={({ value, percent }) => `${value.toFixed(0)}, ${(percent * 100).toFixed(0)}%`}
                             outerRadius={55}
                             fill="#8884d8"
                             dataKey="value"
-                            style={{ fontSize: '10px' }}
+                            style={{ fontSize: '10px', fontWeight: '600' }}
                           >
                             {pieData.map((entry, index) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              <Cell key={`cell-${index}`} fill={regionColorMap[entry.name] || COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
                           <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-dropdown)', fontSize: '12px' }} formatter={(val) => val.toFixed(0)} />
-                          <Legend verticalAlign="bottom" height={20} iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+                          <Legend verticalAlign="bottom" height={20} iconType="square" wrapperStyle={{ fontSize: 11 }} />
                         </PieChart>
                       </ResponsiveContainer>
                     )}
@@ -395,7 +459,7 @@ const WorkingCapital = () => {
                 <thead>
                   <tr>
                     <th style={{ background: '#e0f2fe', width: '40%' }}>Country</th>
-                    {facilityTypeArray.map(t => <th key={t} style={{ background: '#e0f2fe', width: '20%' }} className="num">{t}</th>)}
+                    {facilityTypeArray.map(t => <th key={t} style={{ background: '#e0f2fe', width: '20%' }} className="num">{t === 'Bonds & G' ? 'B&G' : t}</th>)}
                   </tr>
                 </thead>
                 <tbody>
@@ -411,7 +475,7 @@ const WorkingCapital = () => {
                     <td style={{ background: '#0070c0', color: 'white', fontWeight: 'bold', padding: '8px' }}>Total</td>
                     {facilityTypeArray.map(t => (
                       <td key={t} style={{ background: '#0070c0', color: 'white', fontWeight: 'bold', padding: '8px' }} className="num">
-                        {pivotTotals[t] ? pivotTotals[t].toFixed(0) : '-'}
+                        {regionPivotTotals[t] ? regionPivotTotals[t].toFixed(0) : '-'}
                       </td>
                     ))}
                   </tr>
